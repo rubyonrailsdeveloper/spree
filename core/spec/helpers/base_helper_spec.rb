@@ -9,7 +9,7 @@ describe Spree::BaseHelper, type: :helper do
     let(:country) { create(:country) }
 
     before do
-      create_list(:country, 3)
+      3.times { create(:country) }
     end
 
     context 'with no checkout zone defined' do

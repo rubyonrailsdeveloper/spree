@@ -13,19 +13,12 @@ describe 'Visiting Products', type: :feature, inaccessible: true do
     allow(ENV).to receive(:[]).with(:SPREE_USE_PAPERCLIP).and_return(true)
   end
 
-  it 'is able to show the shopping cart after adding a product to it', js: true do
+  it 'is able to show the shopping cart after adding a product to it' do
     click_link 'Ruby on Rails Ringer T-Shirt'
     expect(page).to have_content('$19.99')
 
-    expect(page).to have_selector('form#add-to-cart-form')
-    expect(page).to have_selector('button#add-to-cart-button')
-    wait_for_condition do
-      expect(page.find('#add-to-cart-button').disabled?).to eq(false)
-    end
     click_button 'add-to-cart-button'
-    wait_for_condition do
-      expect(page).to have_content(Spree.t(:shopping_cart))
-    end
+    expect(page).to have_content('Shopping Cart')
   end
 
   describe 'correct displaying of microdata' do
@@ -163,8 +156,11 @@ describe 'Visiting Products', type: :feature, inaccessible: true do
     let!(:variant) { build(:variant, price: 5.59, product: product, option_values: []) }
 
     before do
-      image = File.open(File.expand_path('../fixtures/thinking-cat.jpg', __dir__))
-      create_image(product, image)
+      # Need to have two images to trigger the error
+      image = File.open(File.expand_path('../../fixtures/thinking-cat.jpg', __FILE__))
+
+      product.images.create!(attachment: image)
+      product.images.create!(attachment: image)
 
       product.option_types << option_value.option_type
       variant.option_values << option_value
@@ -208,8 +204,9 @@ describe 'Visiting Products', type: :feature, inaccessible: true do
     let(:variant2) { create(:variant, product: product, price: 10.99) }
 
     before do
-      image = File.open(File.expand_path('../fixtures/thinking-cat.jpg', __dir__))
-      create_image(variant1, image)
+      image = File.open(File.expand_path('../../fixtures/thinking-cat.jpg', __FILE__))
+      variant1.images.create!(attachment: image)
+      variant2.images.create!(attachment: image)
     end
 
     it 'does not display no image available' do
@@ -319,19 +316,11 @@ describe 'Visiting Products', type: :feature, inaccessible: true do
                              'Ruby on Rails Ringer T-Shirt'])
   end
 
-  it 'is able to put a product without a description in the cart', js: true do
+  it 'is able to put a product without a description in the cart' do
     product = FactoryBot.create(:base_product, description: nil, name: 'Sample', price: '19.99')
     visit spree.product_path(product)
-    expect(page).to have_selector('form#add-to-cart-form')
-    expect(page).to have_selector('button#add-to-cart-button')
     expect(page).to have_content 'This product has no description'
-    wait_for_condition do
-      expect(page.find('#add-to-cart-button').disabled?).to eq(false)
-    end
     click_button 'add-to-cart-button'
-    wait_for_condition do
-      expect(page).to have_content(Spree.t(:shopping_cart))
-    end
     expect(page).to have_content 'This product has no description'
   end
 

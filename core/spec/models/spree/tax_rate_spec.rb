@@ -79,12 +79,12 @@ describe Spree::TaxRate, type: :model do
       end
 
       context 'when there is a default tax zone' do
-        subject { Spree::TaxRate.match(order.tax_zone) }
-
         before do
           @zone = create(:zone, name: 'Country Zone', default_tax: true, zone_members: [])
           @zone.zone_members.create(zoneable: country)
         end
+
+        subject { Spree::TaxRate.match(order.tax_zone) }
 
         let(:included_in_price) { false }
         let!(:rate) do
@@ -254,7 +254,7 @@ describe Spree::TaxRate, type: :model do
 
       context 'a download' do
         before do
-          Spree::Cart::AddItem.call(order: order, variant: download.master)
+          order.contents.add(download.master, 1)
         end
 
         it 'without an adress costs 100 euros including tax' do
@@ -294,9 +294,12 @@ describe Spree::TaxRate, type: :model do
       end
 
       context 'a t-shirt' do
+        before do
+          order.contents.add(tshirt.master, 1)
+        end
+
         it 'to germany costs 100 euros including tax' do
           allow(order).to receive(:tax_zone).and_return(germany_zone)
-          Spree::Cart::AddItem.call(order: order, variant: tshirt.master)
           Spree::TaxRate.adjust(order, order.line_items)
           order.update_with_updater!
           expect(order.display_total).to eq(Spree::Money.new(100))
@@ -305,7 +308,6 @@ describe Spree::TaxRate, type: :model do
 
         it 'to france costs 100 euros including tax' do
           allow(order).to receive(:tax_zone).and_return(france_zone)
-          Spree::Cart::AddItem.call(order: order, variant: tshirt.master)
           order.update_line_item_prices!
           Spree::TaxRate.adjust(order, order.line_items)
           order.update_with_updater!
@@ -316,7 +318,6 @@ describe Spree::TaxRate, type: :model do
 
         it 'to somewhere else costs the net amount' do
           allow(order).to receive(:tax_zone).and_return(india_zone)
-          Spree::Cart::AddItem.call(order: order, variant: tshirt.master)
           order.update_line_item_prices!
           Spree::TaxRate.adjust(order, order.line_items)
           order.update_with_updater!
@@ -401,7 +402,7 @@ describe Spree::TaxRate, type: :model do
     end
 
     context 'not taxable line item ' do
-      let!(:line_item) { Spree::Cart::AddItem.call(order: @order, variant: @nontaxable.master).value }
+      let!(:line_item) { @order.contents.add(@nontaxable.master, 1) }
 
       it 'does not create a tax adjustment' do
         Spree::TaxRate.adjust(@order, @order.line_items)
@@ -415,7 +416,7 @@ describe Spree::TaxRate, type: :model do
     end
 
     context 'taxable line item' do
-      let!(:line_item) { Spree::Cart::AddItem.call(order: @order, variant: @taxable.master).value }
+      let!(:line_item) { @order.contents.add(@taxable.master, 1) }
 
       context 'when price includes tax' do
         before do
@@ -537,7 +538,7 @@ describe Spree::TaxRate, type: :model do
           before do
             @price_before_taxes = line_item.price / (1 + @rate1.amount + @rate2.amount)
             # Use the same rounding method as in DefaultTax calculator
-            @price_before_taxes = BigDecimal(@price_before_taxes).round(2, BigDecimal::ROUND_HALF_UP)
+            @price_before_taxes = BigDecimal.new(@price_before_taxes).round(2, BigDecimal::ROUND_HALF_UP)
             line_item.update_column(:pre_tax_amount, @price_before_taxes)
             # Clear out any previously automatically-applied adjustments
             @order.all_adjustments.delete_all

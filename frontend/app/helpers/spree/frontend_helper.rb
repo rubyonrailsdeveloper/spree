@@ -7,7 +7,6 @@ module Spree
 
     def spree_breadcrumbs(taxon, separator = '&nbsp;')
       return '' if current_page?('/') || taxon.nil?
-
       separator = raw(separator)
       crumbs = [content_tag(:li, content_tag(:span, link_to(content_tag(:span, Spree.t(:home), itemprop: 'name'), spree.root_path, itemprop: 'url') + separator, itemprop: 'item'), itemscope: 'itemscope', itemtype: 'https://schema.org/ListItem', itemprop: 'itemListElement')]
       if taxon
@@ -19,6 +18,14 @@ module Spree
       end
       crumb_list = content_tag(:ol, raw(crumbs.flatten.map(&:mb_chars).join), class: 'breadcrumb', itemscope: 'itemscope', itemtype: 'https://schema.org/BreadcrumbList')
       content_tag(:nav, crumb_list, id: 'breadcrumbs', class: 'col-md-12')
+    end
+
+    def breadcrumbs(taxon, separator = '&nbsp;')
+      ActiveSupport::Deprecation.warn(<<-EOS, caller)
+        Spree::FrontendHelper#breadcrumbs was renamed to Spree::FrontendHelper#spree_breadcrumbs
+        and will be removed in Spree 3.6. Please update your code to avoid problems after update
+      EOS
+      spree_breadcrumbs(taxon, separator)
     end
 
     def checkout_progress(numbers: false)
@@ -55,7 +62,9 @@ module Spree
       ignore_types = ['order_completed'].concat(Array(opts[:ignore_types]).map(&:to_s) || [])
 
       flash.each do |msg_type, text|
-        concat(content_tag(:div, text, class: "alert alert-#{msg_type}")) unless ignore_types.include?(msg_type)
+        unless ignore_types.include?(msg_type)
+          concat(content_tag(:div, text, class: "alert alert-#{msg_type}"))
+        end
       end
       nil
     end
@@ -77,18 +86,13 @@ module Spree
 
     def taxons_tree(root_taxon, current_taxon, max_level = 1)
       return '' if max_level < 1 || root_taxon.leaf?
-
       content_tag :div, class: 'list-group' do
         taxons = root_taxon.children.map do |taxon|
-          css_class = current_taxon&.self_and_ancestors&.include?(taxon) ? 'list-group-item active' : 'list-group-item'
+          css_class = current_taxon && current_taxon.self_and_ancestors.include?(taxon) ? 'list-group-item active' : 'list-group-item'
           link_to(taxon.name, seo_url(taxon), class: css_class) + taxons_tree(taxon, current_taxon, max_level - 1)
         end
         safe_join(taxons, "\n")
       end
-    end
-
-    def set_image_alt(image, size)
-      image.alt.present? ? image.alt : image_alt(main_app.url_for(image.url(size)))
     end
   end
 end

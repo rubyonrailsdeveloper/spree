@@ -80,12 +80,8 @@ module Spree
     end
 
     # human readable list of variant options
-    def variant_options(variant, _options = {})
-      ActiveSupport::Deprecation.warn(<<-DEPRECATION, caller)
-        BaseHelper#variant_options is deprecated and will be removed in Spree 4.0.
-        Please use Variant#options_text or LineItem#options_text
-      DEPRECATION
-      variant.options_text
+    def variant_options(v, _options = {})
+      v.options_text
     end
 
     def frontend_available?
@@ -95,7 +91,7 @@ module Spree
     private
 
     def create_product_image_tag(image, product, options, style)
-      options[:alt] = image.alt.blank? ? product.name : image.alt
+      options.reverse_merge! alt: image.alt.blank? ? product.name : image.alt
       image_tag main_app.url_for(image.url(style)), options
     end
 

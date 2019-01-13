@@ -151,7 +151,6 @@ module Spree
       # ever returned. This means that the inventory unit's line_item
       # will have a different variant than the inventory unit itself
       return unless exchange_required?
-
       exchange_inventory_units.build(variant: exchange_variant, line_item: inventory_unit.line_item,
                                      order: inventory_unit.order, quantity: return_quantity)
     end
@@ -162,10 +161,6 @@ module Spree
 
     def set_default_pre_tax_amount
       self.pre_tax_amount = refund_amount_calculator.new.compute(self)
-    end
-
-    def currency
-      return_authorization.try(:currency) || Spree::Config[:currency]
     end
 
     private
@@ -179,6 +174,10 @@ module Spree
 
       Spree::StockItem.find_by(variant_id: inventory_unit.variant_id,
                                stock_location_id: customer_return.stock_location_id)
+    end
+
+    def currency
+      return_authorization.try(:currency) || Spree::Config[:currency]
     end
 
     def process_inventory_unit!
@@ -208,7 +207,6 @@ module Spree
 
     def eligible_exchange_variant
       return unless exchange_variant && exchange_variant_id_changed?
-
       unless eligible_exchange_variants.include?(exchange_variant)
         errors.add(:base, Spree.t(:invalid_exchange_variant))
       end
@@ -227,7 +225,6 @@ module Spree
     def sufficient_quantity_for_return
       # Only perform the check if everything is good so far
       return unless errors.empty? && return_quantity > inventory_unit.quantity
-
       errors.add(:return_quantity, Spree.t(:cannot_return_more_than_bought_quantity))
     end
 

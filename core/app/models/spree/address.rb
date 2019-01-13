@@ -29,9 +29,6 @@ module Spree
 
     validate :state_validate, :postal_code_validate
 
-    delegate :name, :iso3, to: :country, prefix: true
-    delegate :abbr,        to: :state,   prefix: true, allow_nil: true
-
     alias_attribute :first_name, :firstname
     alias_attribute :last_name, :lastname
 
@@ -58,37 +55,27 @@ module Spree
     end
 
     def same_as?(other)
-      ActiveSupport::Deprecation.warn(<<-EOS, caller)
-        Address#same_as? is deprecated and will be removed in Spree 4.0. Please use Address#== instead"
-      EOS
-
-      self == other
+      return false if other.nil?
+      attributes.except(*EXCLUDED_KEYS_FOR_COMPARISION) == other.attributes.except(*EXCLUDED_KEYS_FOR_COMPARISION)
     end
 
-    def same_as(other)
-      ActiveSupport::Deprecation.warn(<<-EOS, caller)
-        Address#same_as is deprecated and will be removed in Spree 4.0. Please use Address#== instead"
-      EOS
-
-      self == other
-    end
+    alias same_as same_as?
 
     def to_s
       "#{full_name}: #{address1}"
     end
 
     def clone
-      self.class.new(value_attributes)
+      self.class.new(attributes.except('id', 'updated_at', 'created_at'))
     end
 
-    def ==(other)
-      return false unless other&.respond_to?(:value_attributes)
+    def ==(other_address)
+      self_attrs = attributes
+      other_attrs = other_address.respond_to?(:attributes) ? other_address.attributes : {}
 
-      value_attributes == other.value_attributes
-    end
+      [self_attrs, other_attrs].each { |attrs| attrs.except!('id', 'created_at', 'updated_at') }
 
-    def value_attributes
-      attributes.except(*EXCLUDED_KEYS_FOR_COMPARISION)
+      self_attrs == other_attrs
     end
 
     def empty?
@@ -119,6 +106,11 @@ module Spree
 
     private
 
+    def clear_state_entities
+      clear_state
+      clear_state_name
+    end
+
     def clear_state
       self.state = nil
     end
@@ -140,7 +132,6 @@ module Spree
       # or when disabled by preference
       return if country.blank? || !Spree::Config[:address_requires_state]
       return unless country.states_required
-
       # ensure associated state belongs to country
       if state.present?
         if state.country == country

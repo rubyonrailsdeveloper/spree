@@ -54,7 +54,6 @@ describe Spree::ReturnItem, type: :model do
 
       context 'when the variant is not resellable' do
         before { return_item.update_attributes(resellable: false) }
-
         it { expect { subject }.not_to change { stock_item.reload.count_on_hand } }
       end
 
@@ -408,13 +407,10 @@ describe Spree::ReturnItem, type: :model do
   describe '#exchange_requested?' do
     context 'exchange variant exists' do
       before { allow(subject).to receive(:exchange_variant) { mock_model(Spree::Variant) } }
-
       it { expect(subject.exchange_requested?).to eq true }
     end
-
     context 'exchange variant does not exist' do
       before { allow(subject).to receive(:exchange_variant).and_return(nil) }
-
       it { expect(subject.exchange_requested?).to eq false }
     end
   end
@@ -422,13 +418,10 @@ describe Spree::ReturnItem, type: :model do
   describe '#exchange_processed?' do
     context 'exchange inventory unit exists' do
       before { allow(subject).to receive(:exchange_inventory_units) { [mock_model(Spree::InventoryUnit)] } }
-
       it { expect(subject.exchange_processed?).to eq true }
     end
-
     context 'exchange inventory unit does not exist' do
       before { allow(subject).to receive(:exchange_inventory_units).and_return([]) }
-
       it { expect(subject.exchange_processed?).to eq false }
     end
   end
@@ -445,7 +438,6 @@ describe Spree::ReturnItem, type: :model do
 
     context 'exchange has not been requested' do
       before { allow(subject).to receive(:exchange_requested?).and_return(false) }
-
       it { expect(subject.exchange_required?).to be false }
     end
 
@@ -454,7 +446,6 @@ describe Spree::ReturnItem, type: :model do
         allow(subject).to receive(:exchange_requested?).and_return(true)
         allow(subject).to receive(:exchange_processed?).and_return(true)
       end
-
       it { expect(subject.exchange_required?).to be false }
     end
   end
@@ -628,12 +619,7 @@ describe Spree::ReturnItem, type: :model do
           let(:return_item)      { build(:return_item) }
           let(:exchange_variant) { create(:variant, product: return_item.inventory_unit.variant.product) }
 
-          before do
-            exchange_variant.stock_items.each do |item|
-              item.update_column(:backorderable, false)
-            end
-            return_item.exchange_variant = exchange_variant
-          end
+          before { return_item.exchange_variant = exchange_variant }
 
           it 'is invalid' do
             expect(subject).not_to be_valid
@@ -720,38 +706,26 @@ describe Spree::ReturnItem, type: :model do
     context 'stock should not restock' do
       context 'return_item is not resellable' do
         before { return_item.resellable = false }
-
         it { expect(subject).to be_nil }
         it { expect { subject }.not_to change { stock_item.reload.count_on_hand } }
       end
 
       context 'variant should not track inventory' do
         before { return_item.variant.track_inventory = false }
-
         it { expect(subject).to be_nil }
         it { expect { subject }.not_to change { stock_item.reload.count_on_hand } }
       end
 
       context 'stock_item not present' do
         before { stock_item.destroy }
-
         it { expect(subject).to be_nil }
         it { expect { subject }.not_to change { stock_item.reload.count_on_hand } }
       end
 
       context 'when restock inventory preference false' do
         before { Spree::Config[:restock_inventory] = false }
-
         it { expect(subject).to be_nil }
         it { expect { subject }.not_to change { stock_item.reload.count_on_hand } }
-      end
-    end
-
-    describe '#currency' do
-      subject { return_item }
-
-      it 'responds to currency method' do
-        expect(subject.respond_to?(:currency)).to eq true
       end
     end
   end

@@ -104,7 +104,9 @@ module Spree
 
     def set_state_if_present
       if params[:state]
-        redirect_to checkout_state_path(@order.state) if @order.can_go_to_state?(params[:state]) && !skip_state_validation?
+        if @order.can_go_to_state?(params[:state]) && !skip_state_validation?
+          redirect_to checkout_state_path(@order.state)
+        end
         @order.state = params[:state]
       end
     end
@@ -153,16 +155,18 @@ module Spree
         packages = @order.shipments.map(&:to_package)
         @differentiator = Spree::Stock::Differentiator.new(@order, packages)
         @differentiator.missing.each do |variant, quantity|
-          Spree::Cart::RemoveItem.call(order: @order, variant: variant, quantity: quantity)
+          @order.contents.remove(variant, quantity)
         end
       end
 
-      @payment_sources = try_spree_current_user.payment_sources if try_spree_current_user&.respond_to?(:payment_sources)
+      if try_spree_current_user && try_spree_current_user.respond_to?(:payment_sources)
+        @payment_sources = try_spree_current_user.payment_sources
+      end
     end
 
     def add_store_credit_payments
       if params.key?(:apply_store_credit)
-        Spree::Checkout::AddStoreCredit.call(order: @order)
+        @order.add_store_credit_payments
 
         # Remove other payment method parameters.
         params[:order].delete(:payments_attributes)
@@ -170,13 +174,15 @@ module Spree
         params.delete(:payment_source)
 
         # Return to the Payments page if additional payment is needed.
-        redirect_to checkout_state_path(@order.state) and return if @order.payments.valid.sum(:amount) < @order.total
+        if @order.payments.valid.sum(:amount) < @order.total
+          redirect_to checkout_state_path(@order.state) and return
+        end
       end
     end
 
     def remove_store_credit_payments
       if params.key?(:remove_store_credit)
-        Spree::Checkout::RemoveStoreCredit.call(order: @order)
+        @order.remove_store_credit_payments
         redirect_to checkout_state_path(@order.state) and return
       end
     end
@@ -188,7 +194,7 @@ module Spree
     end
 
     def check_authorization
-      authorize!(:edit, current_order, cookies.signed[:token])
+      authorize!(:edit, current_order, cookies.signed[:guest_token])
     end
   end
 end

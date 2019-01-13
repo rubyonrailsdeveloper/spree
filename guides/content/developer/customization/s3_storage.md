@@ -3,17 +3,16 @@ title: "Use S3 for storage"
 section: customization
 ---
 
-## How to use S3 with ActiveStorage
+## Overview
 
-Since [Spree 3.6](https://guides.spreecommerce.org/release_notes/spree_3_6_0.html) ActiveStorage is the default attachment system. 
+Currently the Spree backend does not give you the option anymore to configure s3 for image storage.
+This guide covers how you can use S3 for storing assets in Spree.
 
-Please refer to the official [Active Storage documentation](https://guides.rubyonrails.org/active_storage_overview.html#amazon-s3-service)
+### How to use S3
 
-## How to use S3 with Paperclip
+Start with adding AWS-SDK to your gemfile with:  `gem 'aws-sdk'`, then install the gem by running `bundle install`.
 
-Start with adding AWS-SDK to your `Gemfile` with:  `gem 'aws-sdk-s3'`, then install the gem by running `bundle install`.
-
-When that's done you need to configure Spree to use Amazon S3. You can add an initializer or just use the spree.rb initializer located at `config/intializers/spree.rb`.
+When that's done you need to configure Spree to use s3. You can add an initializer or just use the spree.rb initializer located at `config/intializers/spree.rb`.
 
 ```ruby
 attachment_config = {

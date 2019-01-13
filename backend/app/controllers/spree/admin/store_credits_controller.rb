@@ -62,7 +62,8 @@ module Spree
       protected
 
       def permitted_store_credit_params
-        params.require(:store_credit).permit(permitted_store_credit_attributes)
+        params.require(:store_credit).permit(permitted_store_credit_attributes).
+          merge(currency: Spree::Config[:currency])
       end
 
       private

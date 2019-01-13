@@ -25,9 +25,8 @@ module Spree
         [{ option_values: :option_type }, :product, :default_price, :images, { stock_items: :stock_location }]
       end
 
-      after { api_get :index }
-
       it { expect(controller).to receive(:variant_includes).and_return(variants_includes_list) }
+      after { api_get :index }
     end
 
     it 'adds for_currency_and_available_price_amount scope to variants list' do
@@ -51,7 +50,7 @@ module Spree
       api_get :index, per_page: 1
       expect(json_response['count']).to eq(1)
       expect(json_response['current_page']).to eq(1)
-      expect(json_response['pages']).to eq(2)
+      expect(json_response['pages']).to eq(3)
     end
 
     it 'can query the results through a parameter' do
@@ -71,7 +70,7 @@ module Spree
     end
 
     it 'variants returned contain images data' do
-      create_image(variant, image('thinking-cat.jpg'))
+      variant.images.create!(attachment: image('thinking-cat.jpg'))
 
       api_get :index
 
@@ -114,9 +113,9 @@ module Spree
       it 'can select the next page of variants' do
         api_get :index, page: 2, per_page: 1
         expect(json_response['variants'].first).to have_attributes(show_attributes)
-        expect(json_response['total_count']).to eq(2)
+        expect(json_response['total_count']).to eq(3)
         expect(json_response['current_page']).to eq(2)
-        expect(json_response['pages']).to eq(2)
+        expect(json_response['pages']).to eq(3)
       end
     end
 
@@ -132,7 +131,7 @@ module Spree
     end
 
     it 'can see a single variant with images' do
-      create_image(variant, image('thinking-cat.jpg'))
+      variant.images.create!(attachment: image('thinking-cat.jpg'))
 
       api_get :show, id: variant.to_param
 

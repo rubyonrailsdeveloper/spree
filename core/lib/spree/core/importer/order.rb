@@ -3,6 +3,7 @@ module Spree
     module Importer
       class Order
         def self.import(user, params)
+
           ensure_country_id_from_params params[:ship_address_attributes]
           ensure_state_id_from_params params[:ship_address_attributes]
           ensure_country_id_from_params params[:bill_address_attributes]
@@ -39,8 +40,9 @@ module Spree
           end
           order.reload
         rescue Exception => e
-          order.destroy if order&.persisted?
+          order.destroy if order && order.persisted?
           raise e.message
+
         end
 
         def self.create_shipments_from_params(shipments_hash, order)
@@ -95,15 +97,15 @@ module Spree
               line_item = order.line_items.detect { |ln| ln.variant_id == inventory_unit_param[:variant_id] }
               inventory_units << InventoryUnit.new(line_item: line_item, order_id: order.id, variant: line_item.variant, quantity: 1)
             end
+
           end
         end
 
         def self.create_line_items_from_params(line_items, order)
           return {} unless line_items
-
           iterator = case line_items
                      when Hash
-                       ActiveSupport::Deprecation.warn(<<-DEPRECATION, caller)
+                       ActiveSupport::Deprecation.warn(<<-EOS, caller)
               Passing a hash is now deprecated and will be removed in Spree 4.0.
               It is recommended that you pass it as an array instead.
 
@@ -128,11 +130,11 @@ module Spree
                   }
                 }
               }
-                       DEPRECATION
+            EOS
                        :each_value
                      when Array
                        :each
-                     end
+          end
 
           line_items.send(iterator) do |line_item|
             begin
@@ -140,7 +142,7 @@ module Spree
               extra_params = line_item.except(:variant_id, :quantity, :sku)
               line_item = ensure_variant_id_from_params(line_item)
               variant = Spree::Variant.find(line_item[:variant_id])
-              line_item = Cart::AddItem.call(order: order, variant: variant, quantity: line_item[:quantity]).value
+              line_item = order.contents.add(variant, line_item[:quantity])
               # Raise any errors with saving to prevent import succeeding with line items
               # failing silently.
               if extra_params.present?
@@ -157,7 +159,6 @@ module Spree
 
         def self.create_adjustments_from_params(adjustments, order, adjustable = nil)
           return [] unless adjustments
-
           adjustments.each do |a|
             begin
               adjustment = (adjustable || order).adjustments.build(
@@ -176,7 +177,6 @@ module Spree
 
         def self.create_payments_from_params(payments_hash, order)
           return [] unless payments_hash
-
           payments_hash.each do |p|
             begin
               payment = order.payments.build order: order
@@ -195,6 +195,7 @@ module Spree
         end
 
         def self.create_source_payment_from_params(source_hash, payment)
+
           Spree::CreditCard.create(
             month: source_hash[:month],
             year: source_hash[:year],
@@ -208,9 +209,11 @@ module Spree
           )
         rescue Exception => e
           raise "Order import source payments: #{e.message} #{source_hash}"
+
         end
 
         def self.ensure_variant_id_from_params(hash)
+
           sku = hash.delete(:sku)
           unless hash[:variant_id].present?
             hash[:variant_id] = Spree::Variant.active.find_by!(sku: sku).id
@@ -220,6 +223,7 @@ module Spree
           raise "Ensure order import variant: Variant w/SKU #{sku} not found."
         rescue Exception => e
           raise "Ensure order import variant: #{e.message} #{hash}"
+
         end
 
         def self.ensure_country_id_from_params(address)

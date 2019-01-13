@@ -43,28 +43,6 @@ class Project
     end
   end
 
-  # Process CLI arguments
-  #
-  # @param [Array<String>] arguments
-  #
-  # @return [Boolean]
-  #   the success of the CLI run
-  def self.run_cli(arguments)
-    raise ArgumentError if arguments.length > 1
-
-    mode = arguments.fetch(0, DEFAULT_MODE)
-
-    case mode
-    when 'install'
-      install
-      true
-    when 'test'
-      test
-    else
-      raise "Unknown mode: #{mode.inspect}"
-    end
-  end
-
   private
 
   # Check if current bundle is already usable
@@ -94,14 +72,24 @@ class Project
   # @return [Boolean]
   #   the success of the tests
   def run_tests
-    system(%w[bundle exec rspec] + rspec_arguments)
+    # HACK: supporting test coverage as for Paperclip, as for ActiveStorage
+    # remove after, Paperclip going to be deprecated
+    # system(%w[bundle exec rspec] + rspec_arguments)
+    if name == 'core'
+      paperclip_test = system(%w[bundle exec rspec] + rspec_arguments)
+      ENV['USE_PAPERCLIP'] = nil
+      active_storage_test = system(%w[bundle exec rspec] + rspec_arguments)
+      paperclip_test && active_storage_test
+    else
+      system(%w[bundle exec rspec] + rspec_arguments)
+    end
   end
 
-  def rspec_arguments(custom_name = name)
+  def rspec_arguments
     args = []
-    args += %w[--order random --format documentation --profile 10]
+    args += %w[--order random]
     if report_dir = ENV['CIRCLE_TEST_REPORTS']
-      args += %W[-r rspec_junit_formatter --format RspecJunitFormatter -o #{report_dir}/rspec/#{custom_name}.xml]
+      args += %W[-r rspec_junit_formatter --format RspecJunitFormatter -o #{report_dir}/rspec/#{name}.xml]
     end
     args
   end
@@ -176,9 +164,30 @@ class Project
   #
   # @return [undefined]
   def self.log(message)
-    warn(message)
+    $stderr.puts(message)
   end
   private_class_method :log
-end
+
+  # Process CLI arguments
+  #
+  # @param [Array<String>] arguments
+  #
+  # @return [Boolean]
+  #   the success of the CLI run
+  def self.run_cli(arguments)
+    raise ArgumentError if arguments.length > 1
+    mode = arguments.fetch(0, DEFAULT_MODE)
+
+    case mode
+    when 'install'
+      install
+      true
+    when 'test'
+      test
+    else
+      raise "Unknown mode: #{mode.inspect}"
+    end
+  end
+end # Project
 
 exit Project.run_cli(ARGV)

@@ -1,5 +1,3 @@
-require 'spec_helper'
-
 describe Spree::Order, type: :model do
   let(:order) { create(:order_with_totals) }
 

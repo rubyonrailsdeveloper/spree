@@ -107,7 +107,6 @@ module Spree
 
       def collection
         return @collection if @collection.present?
-
         params[:q] ||= {}
         params[:q][:deleted_at_null] ||= '1'
         params[:q][:not_discontinued] ||= '1'
@@ -124,6 +123,7 @@ module Spree
         # This is to include all products and not just deleted products.
         @search = @collection.ransack(params[:q].reject { |k, _v| k.to_s == 'deleted_at_null' })
         @collection = @search.result.
+                      distinct_by_product_ids(params[:q][:s]).
                       includes(product_includes).
                       page(params[:page]).
                       per(params[:per_page] || Spree::Config[:admin_products_per_page])
@@ -132,7 +132,6 @@ module Spree
 
       def create_before
         return if params[:product][:prototype_id].blank?
-
         @prototype = Spree::Prototype.find(params[:product][:prototype_id])
       end
 
@@ -140,7 +139,6 @@ module Spree
         # note: we only reset the product properties if we're receiving a post
         #       from the form on that tab
         return unless params[:clear_product_properties]
-
         params[:product] ||= {}
       end
 

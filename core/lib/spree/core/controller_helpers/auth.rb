@@ -6,7 +6,7 @@ module Spree
         include Spree::Core::TokenGenerator
 
         included do
-          before_action :set_token
+          before_action :set_guest_token
           helper_method :try_spree_current_user
 
           rescue_from CanCan::AccessDenied do |_exception|
@@ -24,20 +24,10 @@ module Spree
           session['spree_user_return_to'] = nil
         end
 
-        def set_token
-          cookies.permanent.signed[:token] ||= cookies.signed[:guest_token]
-          cookies.permanent.signed[:token] ||= {
-            value: generate_token,
-            httponly: true
-          }
-          cookies.permanent.signed[:guest_token] ||= cookies.permanent.signed[:token]
-        end
-
-        def current_oauth_token
-          user = try_spree_current_user
-          return unless user
-
-          @current_oauth_token ||= Doorkeeper::AccessToken.active_for(user).last || Doorkeeper::AccessToken.create!(resource_owner_id: user.id)
+        def set_guest_token
+          if cookies.signed[:guest_token].blank?
+            cookies.permanent.signed[:guest_token] = { value: generate_guest_token, httponly: true }
+          end
         end
 
         def store_location

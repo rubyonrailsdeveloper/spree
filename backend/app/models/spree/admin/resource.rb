@@ -26,7 +26,6 @@ module Spree
 
       def object_name
         return @object_name if @object_name
-
         sub_namespace = sub_namespace_parts.join('_')
         sub_namespace = "#{sub_namespace}_" unless sub_namespace.empty?
         "#{sub_namespace}#{@controller_name.singularize}"

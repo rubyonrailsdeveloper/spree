@@ -53,13 +53,10 @@ module Spree
 
     # give each of the shipments a chance to update themselves
     def update_shipments
-      shipping_method_filter = order.completed? ? ShippingMethod::DISPLAY_ON_BACK_END : ShippingMethod::DISPLAY_ON_FRONT_END
-
       shipments.each do |shipment|
         next unless shipment.persisted?
-
         shipment.update!(order)
-        shipment.refresh_rates(shipping_method_filter)
+        shipment.refresh_rates
         shipment.update_amounts
       end
     end
@@ -135,16 +132,16 @@ module Spree
         # get all the shipment states for this order
         shipment_states = shipments.states
         order.shipment_state = if shipment_states.size > 1
-                                 # multiple shipment states means it's most likely partially shipped
+          # multiple shiment states means it's most likely partially shipped
                                  'partial'
                                else
-                                 # will return nil if no shipments are found
+          # will return nil if no shipments are found
                                  shipment_states.first
-                                 # TODO: inventory unit states?
-                                 # if order.shipment_state && order.inventory_units.where(shipment_id: nil).exists?
-                                 #   shipments exist but there are unassigned inventory units
-                                 #   order.shipment_state = 'partial'
-                                 # end
+          # TODO: inventory unit states?
+          # if order.shipment_state && order.inventory_units.where(shipment_id: nil).exists?
+          #   shipments exist but there are unassigned inventory units
+          #   order.shipment_state = 'partial'
+          # end
                                end
       end
 

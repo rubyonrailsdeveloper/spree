@@ -2,13 +2,12 @@ FactoryBot.define do
   factory :order, class: Spree::Order do
     user
     bill_address
+    completed_at nil
+    email { user.email }
     store
-    completed_at { nil }
-    email        { user.email }
-    currency     { 'USD' }
 
     transient do
-      line_items_price { BigDecimal(10) }
+      line_items_price BigDecimal.new(10)
     end
 
     factory :order_with_totals do
@@ -20,7 +19,7 @@ FactoryBot.define do
 
     factory :order_with_line_item_quantity do
       transient do
-        line_items_quantity { 1 }
+        line_items_quantity 1
       end
 
       after(:create) do |order, evaluator|
@@ -34,17 +33,14 @@ FactoryBot.define do
       ship_address
 
       transient do
-        line_items_count       { 1 }
-        without_line_items     { false }
-        shipment_cost          { 100 }
-        shipping_method_filter { Spree::ShippingMethod::DISPLAY_ON_FRONT_END }
+        line_items_count 1
+        shipment_cost 100
+        shipping_method_filter Spree::ShippingMethod::DISPLAY_ON_FRONT_END
       end
 
       after(:create) do |order, evaluator|
-        unless evaluator.without_line_items
-          create_list(:line_item, evaluator.line_items_count, order: order, price: evaluator.line_items_price)
-          order.line_items.reload
-        end
+        create_list(:line_item, evaluator.line_items_count, order: order, price: evaluator.line_items_price)
+        order.line_items.reload
 
         create(:shipment, order: order, cost: evaluator.shipment_cost)
         order.shipments.reload
@@ -53,7 +49,7 @@ FactoryBot.define do
       end
 
       factory :completed_order_with_totals do
-        state { 'complete' }
+        state 'complete'
 
         after(:create) do |order, evaluator|
           order.refresh_shipment_rates(evaluator.shipping_method_filter)
@@ -73,8 +69,8 @@ FactoryBot.define do
         end
 
         factory :order_ready_to_ship do
-          payment_state  { 'paid' }
-          shipment_state { 'ready' }
+          payment_state 'paid'
+          shipment_state 'ready'
 
           after(:create) do |order|
             create(:payment, amount: order.total, order: order, state: 'completed')

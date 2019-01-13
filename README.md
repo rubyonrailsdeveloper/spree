@@ -2,77 +2,81 @@
 <img src="spree_logo.png" width="261">
 
 * Join our Slack at [slack.spreecommerce.org](http://slack.spreecommerce.org/)
-* [Success Stories](https://spreecommerce.org/stories/)
-* [Integrations](https://spreecommerce.org/integrations/)
-* [Extensions](https://github.com/spree/spree#extensions)
+* [Extensions](https://github.com/spree-contrib)
 * [Documentation](http://guides.spreecommerce.org)
 * [Roadmap](https://github.com/spree/spree/milestones?direction=asc&sort=due_date&state=open)
-* [Maintenance Policy](https://github.com/spree/spree/wiki/Maintenance-Policy)
+* Spree success stories from [OpenCommerce Conf](http://opencommerceconf.org/)
 
 [![Gem Version](https://badge.fury.io/rb/spree.svg)](https://badge.fury.io/rb/spree) [![Circle CI](https://circleci.com/gh/spree/spree.svg?style=shield)](https://circleci.com/gh/spree/spree/tree/master)
 [![Code Climate](https://codeclimate.com/github/spree/spree.svg)](https://codeclimate.com/github/spree/spree)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/8277fc2bb0b1f777084f/test_coverage)](https://codeclimate.com/github/spree/spree/test_coverage)
+[![codebeat](https://codebeat.co/badges/16feb8a2-abf0-4fbb-a130-20b689efcfc0)](https://codebeat.co/projects/github-com-spree-spree)
 [![Slack Status](http://slack.spreecommerce.org/badge.svg)](http://slack.spreecommerce.org)
 
 **Spree** is a complete open source e-commerce solution built with Ruby on Rails. It
-was originally developed by Sean Schofield and is now maintained by [Spark Solutions](http://sparksolutions.co). We're open to [contributions](#contributing) and accepting new [Core Team](https://github.com/spree/spree/wiki/Core-Team) members.
+was originally developed by Sean Schofield and is now maintained by developers from [Spark Solutions](http://sparksolutions.co) and [Vinsol](http://vinsol.com/). We're open to [contributions](#contributing) and accepting new [Core Team](https://github.com/spree/spree/wiki/Core-Team) members.
 
 Spree consists of several different gems, each of which are maintained
 in a single repository and documented in a single set of
 [online documentation](http://guides.spreecommerce.org/).
 
-* **spree_api** (new REST API v2 and legacy REST API v1, [GraphQL support](https://github.com/spree/spree/issues/9176) coming soon)
-* **spree_frontend** (default Rails customer frontend)
-* **spree_backend** (Admin Panel)
-* **spree_cmd** (Command-line tools)
-* **spree_core** (Models, Services & Mailers, the basic components of Spree that it can't run without)
-* **spree_sample** (Sample data)
-
-You don't need to install all of the components. Only the **Core** is mandatory. 
+* spree_api (RESTful API)
+* spree_frontend (Customer frontend)
+* spree_backend (Admin panel)
+* spree_cmd (Command-line tools)
+* spree_core (Models & Mailers, the basic components of Spree that it can't run without)
+* spree_sample (Sample data)
 
 Demo
 ----
+Try Spree with direct deployment on Heroku:
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/spree/spree/tree/3-6-stable)
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/spree/spree)
 
-If you want to run the demo on your local machine, you can use our docker image. It will download and run sample Spree application on http://localhost:3000
+If you have want to run demo spree application on your machine, you can use our docker image with command below. It will
+download and run sample Spree application on http://localhost:3000
 ```shell
-docker run --rm -it -p 3000:3000 spreecommerce/spree:3.6.4
+docker run --rm -it -p 3000:3000 spreecommerce/spree:latest
 ```
-
-Admin Panel credentials - login: `spree@example.com` / password: `spree123`
-
 
 Getting Started
 ----------------------
 
-Add Spree gems to your `Gemfile`:
+Add Spree gems to your Gemfile:
 
 ### Rails 5.2
 
 ```ruby
-gem 'spree', '~> 3.7.0.rc1'
-gem 'spree_auth_devise', '~> 3.4'
-gem 'spree_gateway', '~> 3.4'
+gem 'spree', '~> 3.6.0.rc1'
+gem 'spree_auth_devise', '~> 3.3'
+gem 'spree_gateway', '~> 3.3'
 ```
-
-Rails 5.2 versions come with [ActiveStorage support](https://spreecommerce.org/spree-3-5-and-3-6-with-rails-5-2-ruby-2-5-and-activestorage-support-released/). You can still use Paperclip (see [instructions](https://guides.spreecommerce.org/developer/images.html#paperclip)).
 
 ### Rails 5.1
 
 ```ruby
-gem 'spree', '~> 3.5.0'
-gem 'spree_auth_devise', '~> 3.4'
-gem 'spree_gateway', '~> 3.4'
+gem 'spree', '~> 3.5.0.rc2'
+gem 'spree_auth_devise', '~> 3.3'
+gem 'spree_gateway', '~> 3.3'
 ```
 
 ### Rails 5.0
 
 ```ruby
 gem 'spree', '~> 3.2.7'
-gem 'spree_auth_devise', '~> 3.4'
-gem 'spree_gateway', '~> 3.4'
+gem 'spree_auth_devise', '~> 3.3'
+gem 'spree_gateway', '~> 3.3'
 ```
+
+### Rails 4.2
+
+```ruby
+gem 'spree', '~> 3.1.12'
+gem 'spree_auth_devise', '~> 3.3'
+gem 'spree_gateway', '~> 3.3'
+```
+
+**Note: If you're using fresh Rails 5.1 application, you need to run `bundle update i18n` before following steps
+below.**
 
 
 Run `bundle install`
@@ -117,6 +121,12 @@ bundle exec rake db:seed
 bundle exec rake spree_sample:load
 ```
 
+Bundle Issues
+----------------------
+
+If you encountered any problems with `bundler`, please try downgrading to bundler `1.13.7` or earlier.
+
+
 Browse Store
 ----------------------
 
@@ -135,20 +145,19 @@ Extensions
 Spree Extensions provide additional features not present in the Core system.
 
 
-| Extension | Spree 3.2+ support | Description |
+| Extension | Spree 3.1+ support | Description |
 | --- | --- | --- |
 | [spree_gateway](https://github.com/spree/spree_gateway) | [![Build Status](https://travis-ci.org/spree/spree_gateway.svg?branch=master)](https://travis-ci.org/spree/spree_gateway) | Community supported Spree Payment Method Gateways
 | [spree_auth_devise](https://github.com/spree/spree_auth_devise) | [![Build Status](https://travis-ci.org/spree/spree_auth_devise.svg?branch=master)](https://travis-ci.org/spree/spree_auth_devise) | Provides authentication services for Spree, using the Devise gem.
 | [spree_i18n](https://github.com/spree-contrib/spree_i18n) | [![Build Status](https://travis-ci.org/spree-contrib/spree_i18n.svg?branch=master)](https://travis-ci.org/spree-contrib/spree_i18n) | I18n translation files for Spree Commerce
 | [spree-multi-domain](https://github.com/spree-contrib/spree-multi-domain) | [![Build Status](https://travis-ci.org/spree-contrib/spree-multi-domain.svg?branch=master)](https://travis-ci.org/spree-contrib/spree-multi-domain) | Multiple Spree stores on different domains - single unified backed for processing orders
 | [spree_multi_currency](https://github.com/spree-contrib/spree_multi_currency) | [![Build Status](https://travis-ci.org/spree-contrib/spree_multi_currency.svg?branch=master)](https://travis-ci.org/spree-contrib/spree_multi_currency) | Provides UI to allow configuring multiple currencies in Spree |
-| [spree_multi_vendor](https://github.com/spree-contrib/spree_multi_vendor) | [![Build Status](https://travis-ci.org/spree-contrib/spree_multi_vendor.svg?branch=master)](https://travis-ci.org/spree-contrib/spree_multi_vendor) | Spree Multi Vendor Marketplace extension |
-| [spree-mollie-gateway](https://github.com/mollie/spree-mollie-gateway) | [![Build Status](https://travis-ci.org/mollie/spree-mollie-gateway.svg?branch=master)](https://github.com/mollie/spree-mollie-gateway) | Official [Mollie](https://www.mollie.com) payment gateway for Spree Commerce. |
 | [spree_braintree_vzero](https://github.com/spree-contrib/spree_braintree_vzero) | [![Build Status](https://travis-ci.org/spree-contrib/spree_braintree_vzero.svg?branch=master)](https://travis-ci.org/spree-contrib/spree_braintree_vzero) | Official Spree Braintree v.zero + PayPal extension |
 | [spree_address_book](https://github.com/spree-contrib/spree_address_book) | [![Build Status](https://travis-ci.org/spree-contrib/spree_address_book.svg?branch=master)](https://travis-ci.org/spree-contrib/spree_address_book) | Adds address book for users to Spree |
 | [spree_digital](https://github.com/spree-contrib/spree_digital) | [![Build Status](https://travis-ci.org/spree-contrib/spree_digital.svg?branch=master)](https://travis-ci.org/spree-contrib/spree_digital) | A Spree extension to enable downloadable products |
 | [spree_social](https://github.com/spree-contrib/spree_social) |[![Build Status](https://travis-ci.org/spree-contrib/spree_social.svg?branch=master)](https://travis-ci.org/spree-contrib/spree_social)  | Building block for spree social networking features (provides authentication and account linkage) |
 | [spree_related_products](https://github.com/spree-contrib/spree_related_products) | [![Build Status](https://travis-ci.org/spree-contrib/spree_related_products.svg?branch=master)](https://travis-ci.org/spree-contrib/spree_related_products) | Related products extension for Spree
+| [spree_active_shipping](https://github.com/spree-contrib/spree_active_shipping) | [![Build Status](https://travis-ci.org/spree-contrib/spree_active_shipping.svg?branch=master)](https://travis-ci.org/spree-contrib/spree_active_shipping) | Spree integration for Shopify's active_shipping gem
 | [spree_static_content](https://github.com/spree-contrib/spree_static_content) | [![Build Status](https://travis-ci.org/spree-contrib/spree_static_content.svg?branch=master)](https://travis-ci.org/spree-contrib/spree_static_content) | Manage static pages for Spree |
 | [spree-product-assembly](https://github.com/spree-contrib/spree-product-assembly) | [![Build Status](https://travis-ci.org/spree-contrib/spree-product-assembly.svg?branch=master)](https://travis-ci.org/spree-contrib/spree-product-assembly) | Adds oportunity to make bundle of products |
 | [spree_editor](https://github.com/spree-contrib/spree_editor) | [![Build Status](https://travis-ci.org/spree-contrib/spree_editor.svg?branch=master)](https://travis-ci.org/spree-contrib/spree_editor) | Rich text editor for Spree with Image and File uploading in-place |
@@ -256,9 +265,11 @@ please ensure that you have a postgres user:
 createuser -s -r postgres
 ```
 
-And also ensure that you have [ChromeDriver](http://chromedriver.chromium.org) installed as well.
-Please follow this
-[instruction](https://github.com/SeleniumHQ/selenium/wiki/ChromeDriver) to install it.
+And also ensure that you have [PhantomJS](http://phantomjs.org/) installed as well:
+
+```shell
+brew update && brew install phantomjs
+```
 
 To execute all the tests, you may want to run this command at the
 root of the Spree project to generate test applications and run
@@ -293,15 +304,3 @@ License
 ----------------------
 
 Spree is released under the [New BSD License](https://github.com/spree/spree/blob/master/license.md).
-
-
-About Spark Solutions
-----------------------
-[![Spark Solutions](http://sparksolutions.co/wp-content/uploads/2015/01/logo-ss-tr-221x100.png)][spark]
-
-Spree is maintained by [Spark Solutions Sp. z o.o.][spark].
-
-We are passionate about open source software.
-We are [available for hire][spark].
-
-[spark]:http://sparksolutions.co?utm_source=github

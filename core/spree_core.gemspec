@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.summary     = 'The bare bones necessary for Spree.'
   s.description = 'The bare bones necessary for Spree.'
 
-  s.required_ruby_version     = '>= 2.3.0'
+  s.required_ruby_version     = '>= 2.2.7'
   s.required_rubygems_version = '>= 1.8.23'
 
   s.author      = 'Sean Schofield'
@@ -28,11 +28,11 @@ Gem::Specification.new do |s|
   s.add_dependency 'deface', '~> 1.0'
   s.add_dependency 'ffaker', '~> 2.2'
   s.add_dependency 'friendly_id', '~> 5.2.1'
-  s.add_dependency 'highline', '~> 2.0.0' # Necessary for the install generator
+  s.add_dependency 'highline', '~> 1.6.18' # Necessary for the install generator
   s.add_dependency 'kaminari', '~> 1.0.1'
   s.add_dependency 'money', '~> 6.13'
   s.add_dependency 'monetize', '~> 1.9'
-  s.add_dependency 'paperclip', '~> 6.1.0'
+  s.add_dependency 'paperclip', '~> 6.0.0'
   s.add_dependency 'paranoia', '~> 2.4.1'
   s.add_dependency 'premailer-rails'
   s.add_dependency 'acts-as-taggable-on', '~> 6.0'

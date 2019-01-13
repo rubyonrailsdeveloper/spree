@@ -20,7 +20,6 @@ module Spree
 
       def set_shipping_category
         return true if params['shipping_method'][:shipping_categories].blank?
-
         @shipping_method.shipping_categories = Spree::ShippingCategory.where(id: params['shipping_method'][:shipping_categories])
         @shipping_method.save
         params[:shipping_method].delete(:shipping_categories)
@@ -28,7 +27,6 @@ module Spree
 
       def set_zones
         return true if params['shipping_method'][:zones].blank?
-
         @shipping_method.zones = Spree::Zone.where(id: params['shipping_method'][:zones])
         @shipping_method.save
         params[:shipping_method].delete(:zones)

@@ -69,7 +69,7 @@ end
 
 describe Spree.user_class, type: :model do
   context 'reporting' do
-    let(:order_value) { BigDecimal('80.94') }
+    let(:order_value) { BigDecimal.new('80.94') }
     let(:order_count) { 4 }
     let(:orders) { Array.new(order_count, double(total: order_value)) }
 
@@ -85,12 +85,10 @@ describe Spree.user_class, type: :model do
     describe '#lifetime_value' do
       context 'with orders' do
         before { load_orders }
-
         it 'returns the total of completed orders for the user' do
           expect(subject.lifetime_value).to eq (order_count * order_value)
         end
       end
-
       context 'without orders' do
         it 'returns 0.00' do
           expect(subject.lifetime_value).to eq BigDecimal('0.00')
@@ -108,7 +106,6 @@ describe Spree.user_class, type: :model do
 
     describe '#order_count' do
       before { load_orders }
-
       it 'returns the count of completed orders for the user' do
         expect(subject.order_count).to eq order_count
       end
@@ -117,12 +114,10 @@ describe Spree.user_class, type: :model do
     describe '#average_order_value' do
       context 'with orders' do
         before { load_orders }
-
         it 'returns the average completed order price for the user' do
           expect(subject.average_order_value).to eq order_value
         end
       end
-
       context 'without orders' do
         it 'returns 0.00' do
           expect(subject.average_order_value).to eq BigDecimal('0.00')
@@ -132,7 +127,6 @@ describe Spree.user_class, type: :model do
 
     describe '#display_average_order_value' do
       before { load_orders }
-
       it 'returns a Spree::Money version of average_order_value' do
         value = BigDecimal('500.05')
         allow(subject).to receive(:average_order_value).and_return(value)

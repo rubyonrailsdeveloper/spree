@@ -1,9 +1,4 @@
 module CapybaraExt
-  # https://bugs.chromium.org/p/chromedriver/issues/detail?id=1771
-  def native_fill_in(selector, text)
-    text.to_s.split('').each { |char| find_field(selector).native.send_keys(char) }
-  end
-
   def page!
     save_and_open_page
   end
@@ -106,7 +101,9 @@ module CapybaraExt
   def wait_for_ajax(delay = Capybara.default_max_wait_time)
     Timeout.timeout(delay) do
       active = page.evaluate_script('typeof jQuery !== "undefined" && jQuery.active')
-      active = page.evaluate_script('typeof jQuery !== "undefined" && jQuery.active') until active.zero?
+      until active.zero?
+        active = page.evaluate_script('typeof jQuery !== "undefined" && jQuery.active')
+      end
     end
   end
 

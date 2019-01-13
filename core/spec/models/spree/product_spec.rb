@@ -12,24 +12,6 @@ describe Spree::Product, type: :model do
     let(:product) { create(:product) }
     let(:variant) { create(:variant, product: product) }
 
-    %w[purchasable backorderable in_stock].each do |method_name|
-      describe "#{method_name}?" do
-        before { allow(product).to receive(:variants_including_master) { [product.master, variant] } }
-
-        it "returns false if no variant is #{method_name.humanize.downcase}" do
-          allow_any_instance_of(Spree::Variant).to receive("#{method_name}?").and_return(false)
-
-          expect(product.send("#{method_name}?")).to eq false
-        end
-
-        it "returns true if variant that is #{method_name.humanize.downcase} exists" do
-          allow(variant).to receive("#{method_name}?").and_return(true)
-
-          expect(product.send("#{method_name}?")).to eq true
-        end
-      end
-    end
-
     context '#duplicate' do
       before do
         allow(product).to receive_messages taxons: [create(:taxon)]
@@ -362,13 +344,11 @@ describe Spree::Product, type: :model do
 
       describe 'is not used' do
         before { product.set_property(name, 'bar') }
-
         it { is_expected.to eq name }
       end
 
       describe 'is used' do
         before { product.set_property(name, 'bar', presentation) }
-
         it { is_expected.to eq presentation }
       end
     end
@@ -478,23 +458,13 @@ describe Spree::Product, type: :model do
 
   context '#images' do
     let(:product) { create(:product) }
-    let(:file) { File.open(File.expand_path('../../fixtures/thinking-cat.jpg', __dir__)) }
-    let(:params) { { viewable_id: product.master.id, viewable_type: 'Spree::Variant', attachment: file, alt: 'position 2', position: 2 } }
+    let(:image) { File.open(File.expand_path('../../../fixtures/thinking-cat.jpg', __FILE__)) }
+    let(:params) { { viewable_id: product.master.id, viewable_type: 'Spree::Variant', attachment: image, alt: 'position 2', position: 2 } }
 
     before do
-      images = [
-        Spree::Image.create(params),
-        Spree::Image.create(params.merge(alt: 'position 1', position: 1)),
-        Spree::Image.create(params.merge(viewable_type: 'ThirdParty::Extension', alt: 'position 1', position: 2))
-      ]
-      # fix for ActiveStorage
-      unless Rails.application.config.use_paperclip
-        images.each_with_index do |image, index|
-          image.attachment.attach(io: file, filename: "thinking-cat-#{index + 1}.jpg", content_type: 'image/jpeg')
-          image.save!
-          file.rewind # we need to do this to avoid `ActiveStorage::IntegrityError`
-        end
-      end
+      Spree::Image.create(params)
+      Spree::Image.create(params.merge(alt: 'position 1', position: 1))
+      Spree::Image.create(params.merge(viewable_type: 'ThirdParty::Extension', alt: 'position 1', position: 2))
     end
 
     it 'only looks for variant images' do
@@ -620,24 +590,6 @@ describe Spree::Product, type: :model do
     end
   end
 
-  context '#backordered?' do
-    let!(:product) { create(:product) }
-
-    it 'returns true when out of stock and backorderable' do
-      expect(product.backordered?).to eq(true)
-    end
-
-    it 'returns false when out of stock and not backorderable' do
-      product.stock_items.first.update(backorderable: false)
-      expect(product.backordered?).to eq(false)
-    end
-
-    it 'returns false when there is available item in stock' do
-      product.stock_items.first.update(count_on_hand: 10)
-      expect(product.backordered?).to eq(false)
-    end
-  end
-
   describe '#ensure_no_line_items' do
     let(:product) { create(:product) }
     let!(:line_item) { create(:line_item, variant: product.master) }
@@ -645,42 +597,6 @@ describe Spree::Product, type: :model do
     it 'adds error on product destroy' do
       expect(product.destroy).to eq false
       expect(product.errors[:base]).to include I18n.t('activerecord.errors.models.spree/product.attributes.base.cannot_destroy_if_attached_to_line_items')
-    end
-  end
-
-  context '#default_variant' do
-    let(:product) { create(:product) }
-
-    context 'product has variants' do
-      let!(:variant) { create(:variant, product: product) }
-
-      it 'returns first non-master variant' do
-        expect(product.default_variant).to eq(variant)
-      end
-    end
-
-    context 'product without variants' do
-      it 'returns master variant' do
-        expect(product.default_variant).to eq(product.master)
-      end
-    end
-  end
-
-  context '#default_variant_id' do
-    let(:product) { create(:product) }
-
-    context 'product has variants' do
-      let!(:variant) { create(:variant, product: product) }
-
-      it 'returns first non-master variant ID' do
-        expect(product.default_variant_id).to eq(variant.id)
-      end
-    end
-
-    context 'product without variants' do
-      it 'returns master variant ID' do
-        expect(product.default_variant_id).to eq(product.master.id)
-      end
     end
   end
 end

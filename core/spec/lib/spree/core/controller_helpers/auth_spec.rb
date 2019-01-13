@@ -40,16 +40,16 @@ describe Spree::Core::ControllerHelpers::Auth, type: :controller do
     end
   end
 
-  describe '#set_token' do
+  describe '#set_guest_token' do
     controller(FakesController) do
       def index
-        set_token
+        set_guest_token
         render plain: 'index'
       end
     end
     it 'sends cookie header' do
       get :index
-      expect(response.cookies['token']).not_to be_nil
+      expect(response.cookies['guest_token']).not_to be_nil
     end
     it 'sets httponly flag' do
       get :index
@@ -89,18 +89,15 @@ describe Spree::Core::ControllerHelpers::Auth, type: :controller do
       before do
         allow(controller).to receive_messages(try_spree_current_user: double('User', id: 1, last_incomplete_spree_order: nil))
       end
-
       it 'redirects forbidden path' do
         get :index
         expect(response).to redirect_to(spree.forbidden_path)
       end
     end
-
     context 'when guest user' do
       before do
         allow(controller).to receive_messages(try_spree_current_user: nil)
       end
-
       it 'redirects login path' do
         allow(controller).to receive_messages(spree_login_path: '/login')
         get :index

@@ -6,7 +6,6 @@ module Spree
 
         def perform(payload = {})
           order = payload[:order]
-
           create_unique_adjustments(order, order.shipments)
         end
 

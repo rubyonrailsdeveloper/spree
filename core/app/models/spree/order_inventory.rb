@@ -26,7 +26,7 @@ module Spree
       if units_count < line_item.quantity
         quantity = line_item.quantity - units_count
 
-        shipment ||= determine_target_shipment
+        shipment = determine_target_shipment unless shipment
         add_to_shipment(shipment, quantity)
       elsif (units_count > line_item.quantity) || (units_count == line_item.quantity && line_item_changed)
         remove(units_count, shipment)
@@ -43,7 +43,6 @@ module Spree
       else
         order.shipments.each do |shipment|
           break if quantity.zero?
-
           quantity -= remove_from_shipment(shipment, quantity)
         end
       end
@@ -72,9 +71,7 @@ module Spree
     end
 
     def add_to_shipment(shipment, quantity)
-      if shipment.nil?
-        shipment = order.create_proposed_shipments.first
-      elsif variant.should_track_inventory?
+      if variant.should_track_inventory?
         on_hand, back_order = shipment.stock_location.fill_status(variant, quantity)
 
         shipment.set_up_inventory('on_hand', variant, order, line_item, on_hand)
@@ -102,7 +99,6 @@ module Spree
       shipment_units.each do |inventory_unit|
         inventory_unit.quantity.times do
           break if removed_quantity == quantity
-
           if inventory_unit.quantity > 1
             inventory_unit.decrement(:quantity)
           else

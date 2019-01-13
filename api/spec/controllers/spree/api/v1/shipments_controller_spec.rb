@@ -108,14 +108,16 @@ describe Spree::Api::V1::ShipmentsController, type: :controller do
       end
     end
 
-    context 'should update a shipment' do
-      let(:resource_scoping) { { id: shipment.to_param, shipment: { order_id: shipment.order.to_param, stock_location_id: stock_location.to_param } } }
+    it 'can update a shipment' do
+      params = {
+        shipment: {
+          stock_location_id: stock_location.to_param
+        }
+      }
 
-      it 'can update a shipment' do
-        api_put :update
-        expect(response.status).to eq(200)
-        expect(json_response['stock_location_name']).to eq(stock_location.name)
-      end
+      api_put :update, params
+      expect(response.status).to eq(200)
+      expect(json_response['stock_location_name']).to eq(stock_location.name)
     end
 
     it 'can make a shipment ready' do
@@ -144,7 +146,7 @@ describe Spree::Api::V1::ShipmentsController, type: :controller do
       end
 
       it 'removes a variant from a shipment' do
-        Spree::Cart::AddItem.call(order: order, variant: variant, quantity: 2)
+        order.contents.add(variant, 2)
 
         api_put :remove, variant_id: variant.to_param, quantity: 1
         expect(response.status).to eq(200)
@@ -152,7 +154,7 @@ describe Spree::Api::V1::ShipmentsController, type: :controller do
       end
 
       it 'removes a destroyed variant from a shipment' do
-        Spree::Cart::AddItem.call(order: order, variant: variant, quantity: 2)
+        order.contents.add(variant, 2)
         variant.destroy
 
         api_put :remove, variant_id: variant.to_param, quantity: 1

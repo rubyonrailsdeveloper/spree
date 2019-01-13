@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'spree/testing_support/order_walkthrough'
 
 module Spree
   describe OrderUpdater, type: :model do
@@ -8,7 +7,9 @@ module Spree
 
     context 'order totals' do
       before do
-        create_list(:line_item, 2, order: order, price: 10)
+        2.times do
+          create(:line_item, order: order, price: 10)
+        end
       end
 
       it 'updates payment totals' do
@@ -208,15 +209,8 @@ module Spree
       order.state_changed('shipment')
     end
 
-    shared_context 'with original shipping method gone backend only' do
-      before do
-        order.shipments.first.shipping_method.update(display_on: :back_end)
-        create(:shipping_method) # create frontend available shipping method
-      end
-    end
-
     context 'completed order' do
-      before { order.update(completed_at: Time.current) }
+      before { allow(order).to receive_messages completed?: true }
 
       describe '#update' do
         it 'updates payment state' do
@@ -268,19 +262,12 @@ module Spree
           expect(shipment).to receive(:update_amounts)
           updater.update_shipments
         end
-
-        context 'refresh rates' do
-          include_context 'with original shipping method gone backend only'
-          let(:order) { create(:completed_order_with_totals) }
-
-          it 'keeps the original shipping method' do
-            expect { updater.update_shipments }.not_to change { order.shipments.first.shipping_method }
-          end
-        end
       end
     end
 
-    context 'incomplete order' do
+    context 'incompleted order' do
+      before { allow(order).to receive_messages completed?: false }
+
       it 'doesnt update payment state' do
         expect(updater).not_to receive(:update_payment_state)
         updater.update
@@ -303,16 +290,6 @@ module Spree
         allow(updater).to receive(:update_totals) # Otherwise this gets called and causes a scene
         expect(updater).not_to receive(:update_shipments).with(order)
         updater.update
-      end
-
-      describe '#update_shipments' do
-        include_context 'with original shipping method gone backend only'
-        let(:order) { ::OrderWalkthrough.up_to(:delivery) }
-
-        it 'resets shipping method to frontend-available' do
-          order.updater.update_shipments
-          expect(order.shipments.first.shipping_method).to eq Spree::ShippingMethod.find_by(display_on: 'both')
-        end
       end
     end
   end

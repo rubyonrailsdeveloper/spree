@@ -36,7 +36,6 @@ module Spree
         end
 
         it 'can create a new payment' do
-          allow_any_instance_of(Spree::PaymentMethod).to receive(:source_required?).and_return(false)
           api_post :create, payment: { payment_method_id: PaymentMethod.first.id, amount: 50 }
           expect(response.status).to eq(201)
           expect(json_response).to have_attributes(attributes)
@@ -69,7 +68,7 @@ module Spree
         end
 
         it 'can view the payments for an order given the order token' do
-          api_get :index, order_id: order.to_param, order_token: order.token
+          api_get :index, order_id: order.to_param, order_token: order.guest_token
           expect(json_response['payments'].first).to have_attributes(attributes)
         end
       end

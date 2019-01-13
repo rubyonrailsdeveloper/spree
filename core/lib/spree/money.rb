@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'money'
 
 Money.locale_backend = :i18n
@@ -7,7 +9,6 @@ module Spree
     class <<self
       attr_accessor :default_formatting_rules
     end
-
     self.default_formatting_rules = {
       # Ruby money currently has this as false, which is wrong for the vast
       # majority of locales.
@@ -15,10 +16,11 @@ module Spree
     }
 
     attr_reader :money
-    delegate    :cents, :currency, to: :money
+
+    delegate :cents, :currency, to: :money
 
     def initialize(amount, options = {})
-      @money   = Monetize.parse([amount, (options[:currency] || Spree::Config[:currency])].join)
+      @money = Monetize.parse([amount, (options[:currency] || Spree::Config[:currency])].join)
       @options = Spree::Money.default_formatting_rules.merge(options)
     end
 
@@ -27,7 +29,7 @@ module Spree
     end
 
     def to_s
-      money.format(options)
+      @money.format(@options)
     end
 
     # 1) prevent blank, breaking spaces
@@ -37,7 +39,7 @@ module Spree
       opts[:html_wrap] = opts[:html]
       opts.delete(:html)
 
-      output = money.format(options.merge(opts))
+      output = money.format(@options.merge(opts))
       if opts[:html_wrap]
         output.gsub!(/<\/?[^>]*>/, '') # we don't want wrap every element in span
         output = output.sub(' ', '&nbsp;').html_safe
@@ -51,19 +53,17 @@ module Spree
     end
 
     def decimal_mark
-      options[:decimal_mark] || money.decimal_mark
+      return @money.decimal_mark if @options[:decimal_mark].nil?
+      @options[:decimal_mark]
     end
 
     def thousands_separator
-      options[:thousands_separator] || money.thousands_separator
+      return @money.thousands_separator if @options[:thousands_separator].nil?
+      @options[:thousands_separator]
     end
 
     def ==(obj)
-      money == obj.money
+      @money == obj.money
     end
-
-    private
-
-    attr_reader :options
   end
 end

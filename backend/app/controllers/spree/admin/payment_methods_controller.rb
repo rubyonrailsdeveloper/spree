@@ -72,7 +72,6 @@ module Spree
       def preferences_params
         key = ActiveModel::Naming.param_key(@payment_method)
         return {} unless params.key? key
-
         params.require(key).permit!
       end
     end

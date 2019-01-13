@@ -22,12 +22,12 @@ describe Spree::Api::BaseController, type: :controller do
 
     context 'with a correct order token' do
       it 'succeeds' do
-        api_get :index, order_token: order.token, order_id: order.number
+        api_get :index, order_token: order.guest_token, order_id: order.number
         expect(response.status).to eq(200)
       end
 
       it 'succeeds with an order_number parameter' do
-        api_get :index, order_token: order.token, order_number: order.number
+        api_get :index, order_token: order.guest_token, order_number: order.number
         expect(response.status).to eq(200)
       end
     end
@@ -79,6 +79,6 @@ describe Spree::Api::BaseController, type: :controller do
   end
 
   it 'lets a subclass override the product associations that are eager-loaded' do
-    expect(controller.respond_to?(:product_includes, true)).to be true
+    expect(controller.respond_to?(:product_includes, true)).to be
   end
 end

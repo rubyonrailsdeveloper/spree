@@ -19,7 +19,7 @@ describe Spree::CheckoutController, type: :controller do
   context '#edit' do
     it 'checks if the user is authorized for :edit' do
       expect(controller).to receive(:authorize!).with(:edit, order, token)
-      request.cookie_jar.signed[:token] = token
+      request.cookie_jar.signed[:guest_token] = token
       spree_get :edit, state: 'address'
     end
 
@@ -66,7 +66,7 @@ describe Spree::CheckoutController, type: :controller do
   context '#update' do
     it 'checks if the user is authorized for :edit' do
       expect(controller).to receive(:authorize!).with(:edit, order, token)
-      request.cookie_jar.signed[:token] = token
+      request.cookie_jar.signed[:guest_token] = token
       spree_post :update, state: 'address'
     end
 
@@ -529,7 +529,7 @@ describe Spree::CheckoutController, type: :controller do
       before do
         create(:store_credit_payment_method)
         create(:store_credit, user: user, amount: credit_amount)
-        Spree::Checkout::AddStoreCredit.call(order: order)
+        order.add_store_credit_payments
       end
 
       def expect_invalid_store_credit_payment(order)

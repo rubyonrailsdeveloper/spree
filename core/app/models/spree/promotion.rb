@@ -119,7 +119,6 @@ module Spree
     # called anytime order.update_with_updater! happens
     def eligible?(promotable)
       return false if expired? || usage_limit_exceeded?(promotable) || blacklisted?(promotable)
-
       !!eligible_rules(promotable, {})
     end
 
@@ -129,7 +128,6 @@ module Spree
     def eligible_rules(promotable, options = {})
       # Promotions without rules are eligible by default.
       return [] if rules.none?
-
       specific_rules = rules.select { |rule| rule.applicable?(promotable) }
       return [] if specific_rules.none?
 

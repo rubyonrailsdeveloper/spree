@@ -5,18 +5,17 @@ module SpreeCmd
     desc 'builds a spree extension'
     argument :file_name, type: :string, desc: 'rails app_path', default: 'sample_extension'
 
-    source_root File.expand_path('templates/extension', __dir__)
+    source_root File.expand_path('../templates/extension', __FILE__)
 
     def generate
       use_prefix 'spree_'
 
       empty_directory file_name
 
-      directory 'app',      "#{file_name}/app"
-      directory 'lib',      "#{file_name}/lib"
-      directory 'bin',      "#{file_name}/bin"
-      directory 'spec',     "#{file_name}/spec"
-      directory 'gemfiles', "#{file_name}/gemfiles"
+      directory 'app', "#{file_name}/app"
+      directory 'lib', "#{file_name}/lib"
+      directory 'bin', "#{file_name}/bin"
+      directory 'spec', "#{file_name}/spec"
 
       chmod "#{file_name}/bin/rails", 0o755
 
@@ -40,6 +39,9 @@ module SpreeCmd
 
         Your extension has been generated with a gemspec dependency on Spree #{spree_version}.
 
+        For more information on the versioning of Spree.
+        See http://guides.spreecommerce.org/developer/extensions_tutorial.html#versioning-your-extension
+
         #{'*' * 80}
       }
     end
@@ -54,7 +56,9 @@ module SpreeCmd
       end
 
       def use_prefix(prefix)
-        @file_name = prefix + Thor::Util.snake_case(file_name) unless file_name =~ /^#{prefix}/
+        unless file_name =~ /^#{prefix}/
+          @file_name = prefix + Thor::Util.snake_case(file_name)
+        end
       end
     end
   end

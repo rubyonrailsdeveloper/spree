@@ -22,39 +22,15 @@ module Spree
     alias display_ship_total display_shipment_total
     alias_attribute :ship_total, :shipment_total
 
-    def guest_token
-      ActiveSupport::Deprecation.warn(<<-DEPRECATION, caller)
-        Order#guest_token is deprecated and will be removed in Spree 4.0. Please use Order#token instead
-      DEPRECATION
-
-      token
-    end
-
-    def guest_token?
-      ActiveSupport::Deprecation.warn(<<-DEPRECATION, caller)
-        Order#guest_token? is deprecated and will be removed in Spree 4.0. Please use Order#token? instead
-      DEPRECATION
-
-      token?
-    end
-
-    def guest_token=(value)
-      ActiveSupport::Deprecation.warn(<<-DEPRECATION, caller)
-        Order#guest_token= is deprecated and will be removed in Spree 4.0. Please use Order#token= instead
-      DEPRECATION
-
-      self.token = value
-    end
-
     MONEY_THRESHOLD  = 100_000_000
     MONEY_VALIDATION = {
-      presence: true,
+      presence:     true,
       numericality: {
         greater_than: -MONEY_THRESHOLD,
-        less_than: MONEY_THRESHOLD,
-        allow_blank: true
+        less_than:     MONEY_THRESHOLD,
+        allow_blank:   true
       },
-      format: { with: /\A-?\d+(?:\.\d{1,2})?\z/, allow_blank: true }
+      format:       { with: /\A-?\d+(?:\.\d{1,2})?\z/, allow_blank: true }
     }.freeze
 
     POSITIVE_MONEY_VALIDATION = MONEY_VALIDATION.deep_dup.tap do |validation|
@@ -75,7 +51,7 @@ module Spree
     end
 
     self.whitelisted_ransackable_associations = %w[shipments user promotions bill_address ship_address line_items store]
-    self.whitelisted_ransackable_attributes = %w[completed_at email number state payment_state shipment_state total considered_risky channel]
+    self.whitelisted_ransackable_attributes = %w[completed_at email number state payment_state shipment_state total considered_risky]
 
     attr_reader :coupon_code
     attr_accessor :temporary_address, :temporary_credit_card
@@ -138,8 +114,7 @@ module Spree
     accepts_nested_attributes_for :shipments
 
     # Needs to happen before save_permalink is called
-    before_validation :ensure_store_presence
-    before_validation :ensure_currency_presence
+    before_validation :set_currency
     before_validation :clone_billing_address, if: :use_billing?
     attr_accessor :use_billing
 
@@ -151,8 +126,6 @@ module Spree
       validates :number, length: { maximum: 32, allow_blank: true }, uniqueness: { allow_blank: true }
       validates :email, length: { maximum: 254, allow_blank: true }, email: { allow_blank: true }, if: :require_email
       validates :item_count, numericality: { greater_than_or_equal_to: 0, less_than: 2**31, only_integer: true, allow_blank: true }
-      validates :store
-      validates :currency
     end
     validates :payment_state,        inclusion:    { in: PAYMENT_STATES, allow_blank: true }
     validates :shipment_state,       inclusion:    { in: SHIPMENT_STATES, allow_blank: true }
@@ -172,6 +145,9 @@ module Spree
     class_attribute :update_hooks
     self.update_hooks = Set.new
 
+    class_attribute :line_item_comparison_hooks
+    self.line_item_comparison_hooks = Set.new
+
     scope :created_between, ->(start_date, end_date) { where(created_at: start_date..end_date) }
     scope :completed_between, ->(start_date, end_date) { where(completed_at: start_date..end_date) }
     scope :complete, -> { where.not(completed_at: nil) }
@@ -189,12 +165,7 @@ module Spree
     # Use this method in other gems that wish to register their own custom logic
     # that should be called when determining if two line items are equal.
     def self.register_line_item_comparison_hook(hook)
-      ActiveSupport::Deprecation.warn(<<-EOS, caller)
-        Order.register_line_item_comparison_hook is deprecated and will be removed in Spree 4.0. Please use
-        `Rails.application.config.spree.line_item_comparison_hooks << hook` instead.
-      EOS
-
-      Rails.application.config.spree.line_item_comparison_hooks << hook
+      line_item_comparison_hooks.add(hook)
     end
 
     # For compatiblity with Calculator::PriceSack
@@ -205,6 +176,10 @@ module Spree
     # Sum of all line item amounts pre-tax
     def pre_tax_item_amount
       line_items.to_a.sum(&:pre_tax_amount)
+    end
+
+    def currency
+      self[:currency] || Spree::Config[:currency]
     end
 
     def shipping_discount
@@ -274,13 +249,8 @@ module Spree
       true
     end
 
-    def ensure_store_presence
-      self.store ||= Spree::Store.default
-    end
-
     def allow_cancel?
       return false if !completed? || canceled?
-
       shipment_state.nil? || %w{ready backorder pending}.include?(shipment_state)
     end
 
@@ -329,13 +299,11 @@ module Spree
     #
     # def product_customizations_match
     def line_item_options_match(line_item, options)
-      ActiveSupport::Deprecation.warn(<<-EOS, caller)
-        Order#add is deprecated and will be removed in Spree 4.0. Please use
-        Spree::CompareLineItems service instead.
-      EOS
       return true unless options
 
-      CompareLineItems.new.call(order: self, line_item: line_item, options: options).value
+      line_item_comparison_hooks.all? do |hook|
+        send(hook, line_item, options)
+      end
     end
 
     # Creates new tax charges if there are any applicable rates. If prices already
@@ -351,7 +319,7 @@ module Spree
 
     def update_line_item_prices!
       transaction do
-        line_items.reload.each(&:update_price)
+        line_items.each(&:update_price)
         save!
       end
     end
@@ -491,24 +459,20 @@ module Spree
         old_state = send("#{state}_was")
         new_state = send(state)
         unless old_state == new_state
-          log_state_changes(state_name: name, old_state: old_state, new_state: new_state)
+          state_changes.create(
+            previous_state: old_state,
+            next_state:     new_state,
+            name:           name,
+            user_id:        user_id
+          )
         end
       end
-    end
-
-    def log_state_changes(state_name:, old_state:, new_state:)
-      state_changes.create(
-        previous_state: old_state,
-        next_state: new_state,
-        name: state_name,
-        user_id: user_id
-      )
     end
 
     def coupon_code=(code)
       @coupon_code = begin
                        code.strip.downcase
-                     rescue StandardError
+                     rescue
                        nil
                      end
     end
@@ -569,7 +533,7 @@ module Spree
     end
 
     def shipping_eq_billing_address?
-      bill_address == ship_address
+      (bill_address.empty? && ship_address.empty?) || bill_address.same_as?(ship_address)
     end
 
     def set_shipments_cost
@@ -724,20 +688,12 @@ module Spree
       use_billing.in?([true, 'true', '1'])
     end
 
-    def ensure_currency_presence
-      self.currency ||= store.default_currency || Spree::Config[:currency]
-    end
-
     def set_currency
-      ActiveSupport::Deprecation.warn(<<-DEPRECATION, caller)
-         Spree::Order#set_currency was renamed to Spree::Order#ensure_currency_presence
-         and will be removed in Spree 4.0. Please update your code to avoid problems after update
-      DEPRECATION
-      ensure_currency_presence
+      self.currency = Spree::Config[:currency] if self[:currency].nil?
     end
 
     def create_token
-      self.token ||= generate_token
+      self.guest_token ||= generate_guest_token
     end
 
     def collect_payment_methods

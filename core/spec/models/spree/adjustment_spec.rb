@@ -1,3 +1,5 @@
+#
+
 require 'spec_helper'
 
 describe Spree::Adjustment, type: :model do
@@ -6,16 +8,6 @@ describe Spree::Adjustment, type: :model do
 
   before do
     allow(order).to receive(:update_with_updater!)
-  end
-
-  describe '#amount=' do
-    let(:amount) { '1,599,99' }
-
-    before { adjustment.amount = amount }
-
-    it 'is expected to equal to localized number' do
-      expect(adjustment.amount).to eq(Spree::LocalizedNumber.parse(amount))
-    end
   end
 
   describe 'scopes' do
@@ -82,12 +74,12 @@ describe Spree::Adjustment, type: :model do
   end
 
   describe 'competing_promos scope' do
-    subject do
-      Spree::Adjustment.competing_promos.to_a
-    end
-
     before do
       allow_any_instance_of(Spree::Adjustment).to receive(:update_adjustable_adjustment_total).and_return(true)
+    end
+
+    subject do
+      Spree::Adjustment.competing_promos.to_a
     end
 
     let!(:promotion_adjustment) { create(:adjustment, order: order, source_type: 'Spree::PromotionAction', source_id: nil) }
@@ -135,10 +127,8 @@ describe Spree::Adjustment, type: :model do
   end
 
   context '#currency' do
-    let(:order) { Spree::Order.new(currency: 'EUR') }
-
-    it 'returns the order currency' do
-      expect(adjustment.currency).to eq 'EUR'
+    it 'returns the globally configured currency' do
+      expect(adjustment.currency).to eq 'USD'
     end
   end
 
@@ -183,8 +173,8 @@ describe Spree::Adjustment, type: :model do
       before { expect(adjustment).to receive(:closed?).and_return(false) }
 
       it 'updates the amount' do
-        expect(adjustment).to receive(:adjustable).and_return(double('Adjustable')).at_least(:once)
-        expect(adjustment).to receive(:source).and_return(double('Source')).at_least(:once)
+        expect(adjustment).to receive(:adjustable).and_return(double('Adjustable')).at_least(1).times
+        expect(adjustment).to receive(:source).and_return(double('Source')).at_least(1).times
         expect(adjustment.source).to receive('compute_amount').with(adjustment.adjustable).and_return(5)
         expect(adjustment).to receive(:update_columns).with(amount: 5, updated_at: kind_of(Time))
         adjustment.update!

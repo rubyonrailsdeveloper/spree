@@ -4,7 +4,7 @@ module Spree
       desc 'Copies views from spree frontend to your application'
 
       def self.source_paths
-        [File.expand_path('../../../../../app', __dir__)]
+        [File.expand_path('../../../../../../app/', __FILE__)]
       end
 
       def copy_views

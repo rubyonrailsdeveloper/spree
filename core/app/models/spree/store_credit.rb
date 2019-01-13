@@ -35,8 +35,13 @@ module Spree
 
     attr_accessor :action, :action_amount, :action_originator, :action_authorization_code
 
-    extend Spree::DisplayMoney
-    money_methods :amount, :amount_used
+    def display_amount
+      Spree::Money.new(amount)
+    end
+
+    def display_amount_used
+      Spree::Money.new(amount_used)
+    end
 
     def amount_remaining
       amount - amount_used - amount_authorized
@@ -199,9 +204,9 @@ module Spree
 
     def store_event
       return unless saved_change_to_amount? ||
-        saved_change_to_amount_used? ||
-        saved_change_to_amount_authorized? ||
-        action == ELIGIBLE_ACTION
+          saved_change_to_amount_used? ||
+          saved_change_to_amount_authorized? ||
+          action == ELIGIBLE_ACTION
 
       event = if action
                 store_credit_events.build(action: action)

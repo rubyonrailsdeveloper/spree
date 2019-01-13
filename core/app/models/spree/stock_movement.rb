@@ -31,7 +31,6 @@ module Spree
 
     def update_stock_item_quantity
       return unless stock_item.should_track_inventory?
-
       stock_item.adjust_count_on_hand quantity
     end
   end

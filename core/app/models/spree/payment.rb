@@ -24,7 +24,6 @@ module Spree
 
     validates :payment_method, presence: true
     validates :number, uniqueness: true
-    validates :source, presence: true, if: -> { payment_method&.source_required? }
 
     before_validation :validate_source
 
@@ -44,7 +43,6 @@ module Spree
     validates :amount, numericality: true
 
     delegate :store_credit?, to: :payment_method, allow_nil: true
-    delegate :name,          to: :payment_method, allow_nil: true, prefix: true
     default_scope { order(:created_at) }
 
     scope :from_credit_card, -> { where(source_type: 'Spree::CreditCard') }
@@ -104,8 +102,8 @@ module Spree
       after_transition do |payment, transition|
         payment.state_changes.create!(
           previous_state: transition.from,
-          next_state: transition.to,
-          name: 'payment'
+          next_state:     transition.to,
+          name:           'payment'
         )
       end
     end
@@ -140,7 +138,6 @@ module Spree
     # see https://github.com/spree/spree/issues/981
     def build_source
       return unless new_record?
-
       if source_attributes.present? && source.blank? && payment_method.try(:payment_source_class)
         self.source = payment_method.payment_source_class.new(source_attributes)
         source.payment_method_id = payment_method.id
@@ -149,8 +146,7 @@ module Spree
     end
 
     def actions
-      return [] unless payment_source&.respond_to?(:actions)
-
+      return [] unless payment_source && payment_source.respond_to?(:actions)
       payment_source.actions.select { |action| !payment_source.respond_to?("can_#{action}?") || payment_source.send("can_#{action}?", self) }
     end
 
@@ -161,7 +157,6 @@ module Spree
 
     def is_avs_risky?
       return false if avs_response.blank? || NON_RISKY_AVS_CODES.include?(avs_response)
-
       true
     end
 
@@ -169,7 +164,6 @@ module Spree
       return false if cvv_response_code == 'M'
       return false if cvv_response_code.nil?
       return false if cvv_response_message.present?
-
       true
     end
 

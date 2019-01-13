@@ -18,9 +18,9 @@ describe Spree::Admin::OrdersController, type: :controller do
     let(:order) do
       mock_model(
         Spree::Order,
-        completed?: true,
-        total: 100,
-        number: 'R123456789',
+        completed?:      true,
+        total:           100,
+        number:          'R123456789',
         all_adjustments: adjustments,
         billing_address: mock_model(Spree::Address)
       )
@@ -138,16 +138,14 @@ describe Spree::Admin::OrdersController, type: :controller do
           end
 
           describe 'expects to receive' do
-            after { send_request }
-
             it { expect(order).to receive(:completed?).and_return(false) }
             it { expect(order).to receive(:refresh_shipment_rates).with(display_value).and_return(true) }
             it { expect(order).to receive_message_chain(:shipments, :shipped, :exists?).and_return(true) }
+            after { send_request }
           end
 
           describe 'response' do
             before { send_request }
-
             it { expect(response).to be_redirect }
             it { expect(response).to redirect_to(edit_admin_order_url(order)) }
           end
@@ -159,16 +157,14 @@ describe Spree::Admin::OrdersController, type: :controller do
           end
 
           describe 'expects to receive' do
-            after { send_request }
-
             it { expect(order).to receive(:completed?).and_return(false) }
             it { expect(order).to receive(:refresh_shipment_rates).with(display_value).and_return(true) }
             it { expect(order).to receive_message_chain(:shipments, :shipped, :exists?).and_return(false) }
+            after { send_request }
           end
 
           describe 'response' do
             before { send_request }
-
             it { expect(response).to render_template :cart }
           end
         end
@@ -186,14 +182,12 @@ describe Spree::Admin::OrdersController, type: :controller do
           end
 
           describe 'expects to receive' do
-            after { send_request }
-
             it { expect(order).to receive_message_chain(:shipments, :shipped, :exists?).and_return(true) }
+            after { send_request }
           end
 
           describe 'response' do
             before { send_request }
-
             it { expect(response).to be_redirect }
             it { expect(response).to redirect_to(edit_admin_order_url(order)) }
           end
@@ -205,14 +199,12 @@ describe Spree::Admin::OrdersController, type: :controller do
           end
 
           describe 'expects to receive' do
-            after { send_request }
-
             it { expect(order).to receive_message_chain(:shipments, :shipped, :exists?).and_return(false) }
+            after { send_request }
           end
 
           describe 'response' do
             before { send_request }
-
             it { expect(response).to render_template :cart }
           end
         end
@@ -252,12 +244,12 @@ describe Spree::Admin::OrdersController, type: :controller do
       let(:closed) { double('closed_adjustments') }
 
       before do
-        allow(adjustments).to receive(:finalized).and_return(closed)
+        allow(adjustments).to receive(:closed).and_return(closed)
         allow(closed).to receive(:update_all)
       end
 
       it 'changes all the closed adjustments to open' do
-        expect(adjustments).to receive(:finalized).and_return(closed)
+        expect(adjustments).to receive(:closed).and_return(closed)
         expect(closed).to receive(:update_all).with(state: 'open')
         spree_post :open_adjustments, id: order.number
       end
@@ -294,12 +286,12 @@ describe Spree::Admin::OrdersController, type: :controller do
       let(:open) { double('open_adjustments') }
 
       before do
-        allow(adjustments).to receive(:not_finalized).and_return(open)
+        allow(adjustments).to receive(:open).and_return(open)
         allow(open).to receive(:update_all)
       end
 
       it 'changes all the open adjustments to closed' do
-        expect(adjustments).to receive(:not_finalized).and_return(open)
+        expect(adjustments).to receive(:open).and_return(open)
         expect(open).to receive(:update_all).with(state: 'closed')
         spree_post :close_adjustments, id: order.number
       end
@@ -390,7 +382,7 @@ describe Spree::Admin::OrdersController, type: :controller do
     it 'restricts returned order(s) on index when using OrderSpecificAbility' do
       number = order.number
 
-      create_list(:completed_order_with_totals, 3)
+      3.times { create(:completed_order_with_totals) }
       expect(Spree::Order.complete.count).to eq 4
 
       with_ability(OrderSpecificAbility) do

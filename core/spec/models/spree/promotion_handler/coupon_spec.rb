@@ -102,7 +102,6 @@ module Spree
             # Regression test for #4211
             context 'with incorrect coupon code casing' do
               before { allow(order).to receive_messages coupon_code: '10OFF' }
-
               it 'successfully activates promo' do
                 expect(order.total).to eq(130)
                 subject.apply
@@ -125,7 +124,7 @@ module Spree
               general_promo = Promotion.create name: 'General Promo'
               Promotion::Actions::CreateItemAdjustments.create(promotion: general_promo, calculator: calculator) # general_action
 
-              Spree::Cart::AddItem.call(order: order, variant: create(:variant))
+              order.contents.add create(:variant)
             end
 
             # regression spec for #4515
@@ -239,15 +238,13 @@ module Spree
             @order = Spree::Order.create!
             allow(@order).to receive_messages coupon_code: '10off'
           end
-
           context 'and the product price is less than promo discount' do
             before do
               3.times do |_i|
                 taxable = create(:product, tax_category: @category, price: 9.0)
-                Spree::Cart::AddItem.call(order: @order, variant: taxable.master)
+                @order.contents.add(taxable.master, 1)
               end
             end
-
             it 'successfully applies the promo' do
               # 3 * (9 + 0.9)
               expect(@order.total).to eq(29.7)
@@ -259,15 +256,13 @@ module Spree
               expect(@order.additional_tax_total).to eq(0)
             end
           end
-
           context 'and the product price is greater than promo discount' do
             before do
               3.times do |_i|
                 taxable = create(:product, tax_category: @category, price: 11.0)
-                Spree::Cart::AddItem.call(order: @order, variant: taxable.master, quantity: 2)
+                @order.contents.add(taxable.master, 2)
               end
             end
-
             it 'successfully applies the promo' do
               # 3 * (22 + 2.2)
               expect(@order.total.to_f).to eq(72.6)
@@ -279,7 +274,6 @@ module Spree
               expect(@order.additional_tax_total).to eq(3.6)
             end
           end
-
           context 'and multiple quantity per line item' do
             before do
               twnty_off = Promotion.create name: 'promo', code: '20off'
@@ -291,10 +285,9 @@ module Spree
               allow(@order).to receive_messages coupon_code: '20off'
               3.times do |_i|
                 taxable = create(:product, tax_category: @category, price: 10.0)
-                Spree::Cart::AddItem.call(order: @order, variant: taxable.master, quantity: 2)
+                @order.contents.add(taxable.master, 2)
               end
             end
-
             it 'successfully applies the promo' do
               # 3 * ((2 * 10) + 2.0)
               expect(@order.total.to_f).to eq(66)

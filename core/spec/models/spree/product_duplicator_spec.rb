@@ -2,26 +2,22 @@ require 'spec_helper'
 
 module Spree
   describe Spree::ProductDuplicator, type: :model do
-    let!(:product) { create(:product, properties: [create(:property, name: 'MyProperty')]) }
+    let(:product) { create(:product, properties: [create(:property, name: 'MyProperty')]) }
     let!(:duplicator) { Spree::ProductDuplicator.new(product) }
 
-    let(:file) { File.open(File.expand_path('../../fixtures/thinking-cat.jpg', __dir__)) }
+    let(:image) { File.open(File.expand_path('../../../fixtures/thinking-cat.jpg', __FILE__)) }
     let(:params) do
       {
         viewable_id: product.master.id,
         viewable_type: 'Spree::Variant',
-        attachment: file,
+        attachment: image,
         alt: 'position 1',
         position: 1
       }
     end
 
     before do
-      new_image = Spree::Image.new(params)
-      unless Rails.application.config.use_paperclip
-        new_image.attachment.attach(io: file, filename: File.basename(file))
-      end
-      new_image.save!
+      Spree::Image.create(params)
     end
 
     it 'will duplicate the product' do
@@ -29,9 +25,7 @@ module Spree
     end
 
     it 'will duplicate already duplicated product' do
-      Timecop.scale(3600)
       expect { 3.times { duplicator.duplicate } }.to change { Spree::Product.count }.by(3)
-      Timecop.return
     end
 
     context 'when image duplication enabled' do

@@ -253,16 +253,14 @@ describe 'Checkout', type: :feature, inaccessible: true, js: true do
     it 'allows user to enter a new source' do
       choose 'use_existing_card_no'
 
-      native_fill_in 'Name on card', 'Spree Commerce'
-      native_fill_in 'Card Number',  '4111111111111111'
-      native_fill_in 'card_expiry',  '04 / 20'
-      native_fill_in 'Card Code',    '123'
+      fill_in 'Name on card', with: 'Spree Commerce'
+      fill_in 'Card Number', with: '1'
+      fill_in 'card_expiry', with: '04 / 20'
+      fill_in 'Card Code', with: '123'
 
       expect { click_on 'Save and Continue' }.to change { Spree::CreditCard.count }.by 1
 
       click_on 'Place Order'
-
-      expect(page).to have_content(Spree.t(:thank_you_for_your_order))
       expect(page).to have_current_path(spree.order_path(Spree::Order.last))
     end
   end
@@ -281,7 +279,9 @@ describe 'Checkout', type: :feature, inaccessible: true, js: true do
       click_on 'Save and Continue'
       expect(page).to have_current_path(spree.checkout_state_path('payment'))
 
-      add_to_cart(bag.name)
+      visit spree.root_path
+      click_link bag.name
+      click_button 'add-to-cart-button'
 
       click_on 'Checkout'
       click_on 'Save and Continue'
@@ -335,7 +335,9 @@ describe 'Checkout', type: :feature, inaccessible: true, js: true do
       let!(:bag) { create(:product, name: 'RoR Bag') }
 
       before do
-        add_to_cart(bag.name)
+        visit spree.root_path
+        click_link bag.name
+        click_button 'add-to-cart-button'
       end
 
       it 'redirects user back to address step' do
@@ -350,36 +352,6 @@ describe 'Checkout', type: :feature, inaccessible: true, js: true do
 
         expect(Spree::InventoryUnit.count).to eq 2
       end
-    end
-  end
-
-  # Regression test for #7734
-  context 'if multiple coupon promotions applied' do
-    let(:promotion) { Spree::Promotion.create(name: 'Order Promotion', code: 'o_promotion') }
-    let(:calculator) { Spree::Calculator::FlatPercentItemTotal.create(preferred_flat_percent: '90') }
-    let(:action) { Spree::Promotion::Actions::CreateAdjustment.create(calculator: calculator) }
-
-    let(:promotion_2) { Spree::Promotion.create(name: 'Line Item Promotion', code: 'li_promotion') }
-    let(:calculator_2) { Spree::Calculator::FlatRate.create(preferred_amount: '1000') }
-    let(:action_2) { Spree::Promotion::Actions::CreateItemAdjustments.create(calculator: calculator_2) }
-
-    before do
-      promotion.actions << action
-      promotion_2.actions << action_2
-
-      add_mug_to_cart
-    end
-
-    it "totals aren't negative" do
-      fill_in 'Coupon Code', with: promotion.code
-      click_on 'Apply'
-
-      fill_in 'Coupon Code', with: promotion_2.code
-      click_on 'Apply'
-
-      expect(page).to have_content(promotion.name)
-      expect(page).to have_content(promotion_2.name)
-      expect(Spree::Order.last.total.to_f).to eq 0.0
     end
   end
 
@@ -431,7 +403,7 @@ describe 'Checkout', type: :feature, inaccessible: true, js: true do
     context 'the promotion makes order free (downgrade it total to 0.0)' do
       let(:promotion2) { Spree::Promotion.create(name: 'test-7450', code: 'test-7450') }
       let(:calculator2) do
-        Spree::Calculator::FlatRate.create(preferences: { currency: 'USD', amount: BigDecimal('99999') })
+        Spree::Calculator::FlatRate.create(preferences: { currency: 'USD', amount: BigDecimal.new('99999') })
       end
       let(:action2) { Spree::Promotion::Actions::CreateItemAdjustments.create(calculator: calculator2) }
 
@@ -566,7 +538,6 @@ describe 'Checkout', type: :feature, inaccessible: true, js: true do
       expect(page).not_to have_content(Spree.t(:thank_you_for_your_order))
     end
   end
-
   context "order's address is outside the default included tax zone" do
     context 'so that no taxation applies to its product' do
       before do
@@ -708,7 +679,6 @@ describe 'Checkout', type: :feature, inaccessible: true, js: true do
           additional_store_credit.update(amount: 5)
           click_button 'Apply Store Credit'
         end
-
         it 'remove store credits button should remove store_credits' do
           click_button 'Remove Store Credit'
           expect(page).to have_current_path(spree.checkout_state_path(:payment))
@@ -744,6 +714,8 @@ describe 'Checkout', type: :feature, inaccessible: true, js: true do
   end
 
   def add_mug_to_cart
-    add_to_cart(mug.name)
+    visit spree.root_path
+    click_link mug.name
+    click_button 'add-to-cart-button'
   end
 end

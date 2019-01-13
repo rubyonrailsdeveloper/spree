@@ -42,7 +42,7 @@ describe Spree::Order, type: :model do
     it '.remove_transition' do
       options = { from: transitions.first.keys.first, to: transitions.first.values.first }
       expect(Spree::Order).to receive_messages(
-        removed_transitions: [],
+        removed_transitions:    [],
         next_event_transitions: transitions.dup
       )
       expect(Spree::Order.remove_transition(options)).to be_truthy
@@ -94,7 +94,6 @@ describe Spree::Order, type: :model do
 
       context 'when payment not required' do
         before { allow(order).to receive_messages payment_required?: false }
-
         specify do
           expect(order.checkout_steps).to eq(%w(address delivery complete))
         end
@@ -102,7 +101,6 @@ describe Spree::Order, type: :model do
 
       context 'when payment required' do
         before { allow(order).to receive_messages payment_required?: true }
-
         specify do
           expect(order.checkout_steps).to eq(%w(address delivery payment complete))
         end

@@ -16,15 +16,18 @@ module Spree
     end
 
     def compute(object)
-      compute_from_quantity(object.quantity)
-    end
+      sum = 0
+      max = preferred_max_items.to_i
+      items_count = object.quantity
+      items_count.times do |i|
+        if i == 0
+          sum += preferred_first_item.to_f
+        elsif ((max > 0) && (i <= (max - 1))) || (max == 0)
+          sum += preferred_additional_item.to_f
+        end
+      end
 
-    def compute_from_quantity(quantity)
-      count = [quantity, preferred_max_items].reject(&:zero?).min
-
-      return BigDecimal(0) if count.zero?
-
-      preferred_first_item + (count - 1) * preferred_additional_item
+      sum
     end
   end
 end

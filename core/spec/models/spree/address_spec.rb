@@ -297,6 +297,15 @@ describe Spree::Address, type: :model do
     specify { expect(address.instance_eval { require_phone? }).to be true }
   end
 
+  context '#clear_state_entities' do
+    let (:address) { create(:address) }
+
+    before { address.state_name = 'maryland' }
+
+    it { expect { address.send(:clear_state_entities) }.to change(address, :state).to(nil).from(address.state) }
+    it { expect { address.send(:clear_state_entities) }.to change(address, :state_name).to(nil).from('maryland') }
+  end
+
   context '#clear_state' do
     let (:address) { create(:address) }
 
@@ -350,7 +359,6 @@ describe Spree::Address, type: :model do
 
       context 'state belongs to the same country associated with address' do
         before { clear_state_entities }
-
         it { expect(address.state).to eq(state) }
         it { expect(address.state_name).to be_nil }
       end
@@ -395,18 +403,17 @@ describe Spree::Address, type: :model do
     end
   end
 
-  context '#==' do
+  context '#same_as' do
     let(:address) { create(:address) }
     let(:address2) { address.clone }
 
     context 'same addresses' do
-      it { expect(address == address2).to eq(true) }
+      it { expect(address.same_as?(address2)).to eq(true) }
     end
 
     context 'different addresses' do
       before { address2.first_name = 'Someone Else' }
-
-      it { expect(address == address2).to eq(false) }
+      it { expect(address.same_as?(address2)).to eq(false) }
     end
   end
 

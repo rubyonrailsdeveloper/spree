@@ -10,12 +10,12 @@ module Spree
       let(:calculator) { Calculator::FlatPercentItemTotal.new(preferred_flat_percent: 10) }
       let!(:action) { Promotion::Actions::CreateAdjustment.create(promotion: promotion, calculator: calculator) }
 
-      before { Spree::Cart::AddItem.call(order: order, variant: shirt).value }
+      before { order.contents.add(shirt, 1) }
 
       context 'item quantity changes' do
         it 'recalculates order adjustments' do
           expect do
-            Spree::Cart::AddItem.call(order: order, variant: shirt, quantity: 3)
+            order.contents.add(shirt, 3)
           end.to change { order.adjustments.eligible.pluck(:amount) }
         end
       end

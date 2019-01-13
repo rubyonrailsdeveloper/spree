@@ -1,15 +1,4 @@
 en:
-  activemodel:
-    errors:
-      models:
-        spree/fulfilment_changer:
-          attributes:
-            desired_shipment:
-              can_not_transfer_within_same_shipment: can not be same as current shipment
-              not_enough_stock_at_desired_location: not enough stock in desired stock location
-            current_shipment:
-              has_already_been_shipped: has already been shipped
-              can_not_have_backordered_inventory_units: has backordered inventory units
   activerecord:
     attributes:
       spree/address:
@@ -377,7 +366,7 @@ en:
             attachment:
               not_allowed_content_type: has not allowed content type
               attachment_must_be_present: must be present
-        spree/taxon_image:
+        spree/taxon_icon:
           attributes:
             attachment:
               not_allowed_content_type: has not allowed content type
@@ -596,7 +585,6 @@ en:
       other: 'Subtotal (%{count} items)'
     categories: Categories
     category: Category
-    channel: Channel
     charged: Charged
     checkout: Checkout
     choose_a_customer: Choose a customer
@@ -732,10 +720,6 @@ en:
         blank: can't be blank
         could_not_create_taxon: Could not create taxon
         no_shipping_methods_available: No shipping methods available for selected location, please change your address and try again.
-      services:
-        get_shipping_rates:
-          no_shipping_address: To generate Shipping Rates Order needs to have a Shipping Address
-          no_line_items: To generate Shipping Rates you need to add some Line Items to Order
     errors_prohibited_this_record_from_being_saved:
       one: 1 error prohibited this record from being saved
       other: ! '%{count} errors prohibited this record from being saved'
@@ -820,7 +804,6 @@ en:
       other: "and %{count} others"
     instructions_to_reset_password: Please enter your email on the form below
     insufficient_stock: Insufficient stock available, only %{on_hand} remaining
-    insufficient_stock_item_quantity: Insufficient stock quantity available
     insufficient_stock_lines_present: Some line items in this order have insufficient quantity.
     intercept_email_address: Intercept Email Address
     intercept_email_instructions: Override email recipient and replace with this address.
@@ -1028,8 +1011,6 @@ en:
     order_updated: Order Updated
     orders: Orders
     out_of_stock: Out of Stock
-    backordered_info: Selected item is backordered so expect delays
-    backordered_confirm_info: Selected item is backordered so expect delays. Are you sure you want to order it?
     overview: Overview
     package_from: package from
     pagination:

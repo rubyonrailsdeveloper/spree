@@ -15,7 +15,6 @@ module Spree
 
       def collection(resource)
         return @collection if @collection.present?
-
         params[:q] ||= {}
 
         @collection = resource.all

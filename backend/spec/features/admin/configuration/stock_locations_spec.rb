@@ -2,9 +2,9 @@ require 'spec_helper'
 
 describe 'Stock Locations', type: :feature do
   stub_authorization!
-  let!(:stock_location) { create(:stock_location) }
 
   before do
+    create(:country)
     visit spree.admin_stock_locations_path
   end
 
@@ -19,9 +19,11 @@ describe 'Stock Locations', type: :feature do
   end
 
   it 'can delete an existing stock location', js: true do
+    create(:stock_location)
+
     visit current_path
 
-    expect(find('#listing_stock_locations')).to have_content(stock_location.name)
+    expect(find('#listing_stock_locations')).to have_content('NY Warehouse')
     spree_accept_alert do
       click_icon :delete
       # Wait for API request to complete.
@@ -32,9 +34,10 @@ describe 'Stock Locations', type: :feature do
   end
 
   it 'can update an existing stock location', js: true do
+    create(:stock_location)
     visit current_path
 
-    expect(page).to have_content(stock_location.name)
+    expect(page).to have_content('NY Warehouse')
 
     click_icon :edit
     fill_in 'Name', with: 'London'

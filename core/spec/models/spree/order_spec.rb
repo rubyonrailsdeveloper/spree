@@ -106,7 +106,7 @@ describe Spree::Order, type: :model do
     end
 
     it 'creates a randomized 35 character token' do
-      expect(order.token.size).to eq(35)
+      expect(order.guest_token.size).to eq(35)
     end
   end
 
@@ -130,8 +130,6 @@ describe Spree::Order, type: :model do
     before do
       order.update_column :state, 'complete'
     end
-
-    after { Spree::Config.set track_inventory_levels: true }
 
     it 'sets completed_at' do
       expect(order).to receive(:touch).with(:completed_at)
@@ -163,6 +161,7 @@ describe Spree::Order, type: :model do
       expect(order.shipment_state).to eq('ready')
     end
 
+    after { Spree::Config.set track_inventory_levels: true }
     it 'does not sell inventory units if track_inventory_levels is false' do
       Spree::Config.set track_inventory_levels: false
       expect(Spree::InventoryUnit).not_to receive(:sell_units)
@@ -257,7 +256,7 @@ describe Spree::Order, type: :model do
 
     context 'when no variants are destroyed' do
       it 'does not restart checkout' do
-        expect(order).not_to receive(:restart_checkout_flow)
+        expect(order).to receive(:restart_checkout_flow).never
         subject
       end
 
@@ -371,6 +370,14 @@ describe Spree::Order, type: :model do
         expect(order.currency).to eq('ABC')
       end
     end
+
+    context 'when object currency is nil' do
+      before { order.currency = nil }
+
+      it 'returns the globally configured currency' do
+        expect(order.currency).to eq('USD')
+      end
+    end
   end
 
   context '#confirmation_required?' do
@@ -432,9 +439,8 @@ describe Spree::Order, type: :model do
   end
 
   describe '#tax_address' do
-    subject { order.tax_address }
-
     before { Spree::Config[:tax_using_ship_address] = tax_using_ship_address }
+    subject { order.tax_address }
 
     context 'when tax_using_ship_address is true' do
       let(:tax_using_ship_address) { true }
@@ -561,12 +567,12 @@ describe Spree::Order, type: :model do
 
     context 'match line item with options' do
       before do
-        Rails.application.config.spree.line_item_comparison_hooks << :foos_match
+        Spree::Order.register_line_item_comparison_hook(:foos_match)
       end
 
       after do
         # reset to avoid test pollution
-        Rails.application.config.spree.line_item_comparison_hooks = Set.new
+        Spree::Order.line_item_comparison_hooks = Set.new
       end
 
       it 'matches line item when options match' do
@@ -593,9 +599,9 @@ describe Spree::Order, type: :model do
 
     let(:order_attributes) do
       {
-        user: nil,
-        email: nil,
-        created_by: nil,
+        user:         nil,
+        email:        nil,
+        created_by:   nil,
         bill_address: nil,
         ship_address: nil
       }
@@ -610,9 +616,9 @@ describe Spree::Order, type: :model do
       expect(order.created_by).to eql(created_by)
       expect(order.created_by_id).to eql(created_by.id)
 
-      expect(order.bill_address == bill_address).to be(true) if order.bill_address
+      expect(order.bill_address.same_as?(bill_address)).to be(true) if order.bill_address
 
-      expect(order.ship_address == ship_address).to be(true) if order.ship_address
+      expect(order.ship_address.same_as?(ship_address)).to be(true) if order.ship_address
     end
 
     shared_examples_for '#associate_user!' do |persisted = false|
@@ -768,7 +774,6 @@ describe Spree::Order, type: :model do
       @order.line_items = [create(:line_item, price: 1.0, quantity: 2),
                            create(:line_item, price: 1.0, quantity: 1)]
     end
-
     it 'returns the correct lum sum of items' do
       expect(@order.amount).to eq(3.0)
     end
@@ -1050,7 +1055,6 @@ describe Spree::Order, type: :model do
         resumed_order.inventory_units.update_all(state: 'returned')
         resumed_order.return
       end
-
       it { expect(resumed_order).to be_returned }
     end
 
@@ -1059,7 +1063,6 @@ describe Spree::Order, type: :model do
         resumed_order.inventory_units.first.update_attribute(:state, 'returned')
         resumed_order.return
       end
-
       it { expect(resumed_order).to be_resumed }
     end
   end
@@ -1117,32 +1120,6 @@ describe Spree::Order, type: :model do
       end
 
       it { expect(order).to receive_message_chain(:shipments, :any?).and_return(false) }
-    end
-  end
-
-  describe '#shipping_eq_billing_address' do
-    let!(:order) { create(:order) }
-
-    context 'with only bill address' do
-      it { expect(order.shipping_eq_billing_address?).to eq(false) }
-    end
-
-    context 'blank addresses' do
-      before do
-        order.bill_address = Spree::Address.new
-        order.ship_address = Spree::Address.new
-      end
-
-      it { expect(order.shipping_eq_billing_address?).to eq(true) }
-    end
-
-    context 'no addresses' do
-      before do
-        order.bill_address = nil
-        order.ship_address = nil
-      end
-
-      it { expect(order.shipping_eq_billing_address?).to eq(true) }
     end
   end
 end

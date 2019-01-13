@@ -24,7 +24,7 @@ module Spree
         if params[:q][:created_at_gt].present?
           params[:q][:created_at_gt] = begin
                                          Time.zone.parse(params[:q][:created_at_gt]).beginning_of_day
-                                       rescue StandardError
+                                       rescue
                                          ''
                                        end
         end
@@ -32,7 +32,7 @@ module Spree
         if params[:q][:created_at_lt].present?
           params[:q][:created_at_lt] = begin
                                          Time.zone.parse(params[:q][:created_at_lt]).end_of_day
-                                       rescue StandardError
+                                       rescue
                                          ''
                                        end
         end
@@ -119,7 +119,7 @@ module Spree
       end
 
       def open_adjustments
-        adjustments = @order.all_adjustments.finalized
+        adjustments = @order.all_adjustments.closed
         adjustments.update_all(state: 'open')
         flash[:success] = Spree.t(:all_adjustments_opened)
 
@@ -127,7 +127,7 @@ module Spree
       end
 
       def close_adjustments
-        adjustments = @order.all_adjustments.not_finalized
+        adjustments = @order.all_adjustments.open
         adjustments.update_all(state: 'closed')
         flash[:success] = Spree.t(:all_adjustments_closed)
 

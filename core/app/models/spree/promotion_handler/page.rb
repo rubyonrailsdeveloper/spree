@@ -9,7 +9,7 @@ module Spree
       end
 
       def activate
-        if promotion&.eligible?(order)
+        if promotion && promotion.eligible?(order)
           promotion.activate(order: order)
         end
       end

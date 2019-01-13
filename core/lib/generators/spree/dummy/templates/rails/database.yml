@@ -6,7 +6,6 @@ end %>
 end %>
 <% db_password = ENV['DB_PASSWORD'] %>
 <% db_username = ENV['DB_USERNAME'] %>
-<% db_host = ENV['DB_HOST'] %>
 <% case ENV['DB']
   when 'sqlite' %>
 development:
@@ -29,11 +28,6 @@ mysql: &mysql
   <% unless db_password.blank? %>
   password: <%= db_password %>
   <% end %>
-  <% unless db_host.blank? %>
-  host: <%= db_host %>
-  <% end %>
-  reconnect: true
-  pool: 5
 
 development:
   <<: *mysql
@@ -45,6 +39,7 @@ production:
   <<: *mysql
   database: <%= database_prefix %><%= lib_name %>_spree_production
 <% when 'postgres' %>
+<% db_host = ENV['DB_HOST'] %>
 postgres: &postgres
   adapter: postgresql
   <% unless db_username.blank? %>

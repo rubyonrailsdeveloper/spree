@@ -22,10 +22,6 @@ module Spree
       default || find_by(iso: 'US') || first
     end
 
-    def default?
-      id == Spree::Config[:default_country_id]
-    end
-
     def <=>(other)
       name <=> other.name
     end
