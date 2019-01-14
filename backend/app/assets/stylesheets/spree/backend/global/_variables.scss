@@ -9,6 +9,12 @@
 
   $input-border:  darken(#EDEDED, 5);
 
+  $gray-lighter: #eeeeee;
+  $gray: #555555;
+  $gray-light: #777777;
+  $btn-success-color: #ffffff;
+
+
 /*------------------------------------------
   Components
   -----------------------------------------*/
@@ -16,11 +22,18 @@
   $padding-base-vertical: 8px;
   $padding-base-horizontal: 16px;
 
+  $navbar-height: 50px;
+  $input-height-base: 38px;
+  $input-bg: #fff;
+  $dropdown-link-color: #333333;
+
 /*------------------------------------------
   Fonts
   -----------------------------------------*/
   $headings-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
   $headings-font-weight: 300;
+  $font-size-base: 14px;
+  $font-size-h1: 36px;
 
 /*------------------------------------------
   Buttons
