@@ -2,11 +2,11 @@
   display: block;
 
   .select2-choice {
-    //height: $input-height-base;
+    height: $input-height-base;
     line-height: 2.2;
     border-color: $input-border;
     background-image: none;
-    //background-color: $input-bg;
+    background-color: $input-bg;
 
     &, .select2-arrow {
       border-radius: $border-radius-base;
@@ -14,7 +14,7 @@
 
     .select2-arrow {
       background-image: none;
-      //background-color: $input-bg;
+      background-color: $input-bg;
       border-top-left-radius: 0;
       border-bottom-left-radius: 0;
       border-left-color: $input-border;
@@ -71,9 +71,9 @@
   border-color: lighten($brand-success, 20);
 }
 
-//.select2-result-label {
-//  color: $gray;
-//}
+.select2-result-label {
+  color: $gray;
+}
 
 .select2-results .select2-highlighted {
   background-color: $brand-primary;
@@ -88,7 +88,7 @@
     line-height: 1.8;
     border-color: $input-border;
     background-image: none;
-    //background-color: $input-bg;
+    background-color: $input-bg;
 
     .select2-search-choice {
       @extend .label;
