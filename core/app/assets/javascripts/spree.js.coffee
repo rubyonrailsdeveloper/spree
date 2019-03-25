@@ -7,15 +7,9 @@ class window.Spree
     jQuery(document).on 'page:load turbolinks:load', ->
       callback(jQuery)
 
-  @mountedAt: ->
-    window.SpreePaths.mounted_at
-
-  @adminPath: ->
-    window.SpreePaths.admin
-
-  @pathFor: (path) ->
-    locationOrigin = "#{window.location.protocol}//#{window.location.hostname}" + (if window.location.port then ":#{window.location.port}" else "")
-    @url("#{locationOrigin}#{@mountedAt()}#{path}", @url_params).toString()
+  
+  
+  
 
   @adminPathFor: (path) ->
     @pathFor("#{@adminPath()}#{path}")
