@@ -50,10 +50,4 @@ class window.Spree
       delete url_or_settings['url']
       $.ajax(Spree.url(url).toString(), url_or_settings)
 
-  @routes:
-    states_search: @pathFor('api/v1/states')
-    apply_coupon_code: (order_id) ->
-      Spree.pathFor("api/v1/orders/#{order_id}/apply_coupon_code")
 
-  @url_params:
-    {}
